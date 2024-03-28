@@ -117,6 +117,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
             BuildingManager instance2 = Singleton<BuildingManager>.instance;
             CitizenManager instance3 = Singleton<CitizenManager>.instance;
             Building building = instance2.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
             if (ExtedndedVehicleManager.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, building.m_position, ExtendedTransferManager.TransferReason.CarRent, transferToSource: false, transferToTarget: false))
             {
                 Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
@@ -125,6 +126,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
                 instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
                 vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
+                
                 instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
                 instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
                 instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;
@@ -141,6 +143,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
                 citizenData.m_waitCounter = 0;
+                Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].AddOwnVehicle(vehicle, ref vehicles.m_buffer[vehicle]);
             }
         }
 

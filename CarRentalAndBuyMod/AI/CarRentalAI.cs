@@ -205,20 +205,6 @@ namespace CarRentalAndBuyMod.AI
 		{
 			switch (material)
 			{
-				case (TransferManager.TransferReason)123:
-				{
-					int customBuffer2 = data.m_customBuffer2;
-					amountDelta = Mathf.Clamp(amountDelta, -customBuffer2, 0);
-					data.m_customBuffer2 = (ushort)(customBuffer2 + amountDelta);
-					data.m_outgoingProblemTimer = 0;
-					data.m_education1 = (byte)Mathf.Clamp(data.m_education1 + (-amountDelta + 99) / 100, 0, 255);
-					int num = (-amountDelta * m_rentalCarPrice + 50) / 100;
-					if (num != 0)
-					{
-						Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.ResourcePrice, num, m_info.m_class);
-					}
-					break;
-				}
 				default:
 					if (material == m_incomingResource)
 					{
@@ -235,7 +221,7 @@ namespace CarRentalAndBuyMod.AI
 			}
 		}
 
-		public override void GetMaterialAmount(ushort buildingID, ref Building data, TransferManager.TransferReason material, out int amount, out int max)
+        public override void GetMaterialAmount(ushort buildingID, ref Building data, TransferManager.TransferReason material, out int amount, out int max)
 		{
 			if (material == m_incomingResource)
 			{
@@ -299,11 +285,10 @@ namespace CarRentalAndBuyMod.AI
                 //int capacity1 = 0;
                 //int outside1 = 0;
 
-
                 ExtedndedVehicleManager.CalculateOwnVehicles(buildingID, ref buildingData, ExtendedTransferManager.TransferReason.CarRent, ref count, ref cargo, ref capacity, ref outside); // own rental cars
 				//CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.LuxuryProducts, ref count1, ref cargo1, ref capacity1, ref outside1); // guest car transporters
 				//int num10 = (finalProductionRate * m_rentalCarCount + 99) / 100;
-
+				int num10 = (finalProductionRate * m_rentalCarCount + 99) / 100;
 				if (buildingData.m_fireIntensity == 0 && m_incomingResource != TransferManager.TransferReason.None)
 				{
 					//int num11 = num10 - count;
@@ -318,7 +303,7 @@ namespace CarRentalAndBuyMod.AI
 					//	Singleton<TransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
 					//}
 
-					if (count > 0)
+					if (count < num10)
 					{
 						ExtendedTransferManager.Offer offer2 = default;
 						offer2.Building = buildingID;
