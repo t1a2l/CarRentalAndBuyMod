@@ -1,11 +1,13 @@
 ﻿using CarRentalAndBuyMod.AI;
 using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
+using ColossalFramework.Math;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
 using System.Reflection;
 using UnityEngine;
+using static RenderManager;
 
 namespace CarRentalAndBuyMod.HarmonyPatches {
 
@@ -112,7 +114,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
 
         private static void SpawnRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData)
         {
-            VehicleInfo vehicleInfo = GetVehicleInfo(__instance, instanceID, ref citizenData, forceProbability: false, out VehicleInfo trailer);
+            VehicleInfo vehicleInfo = GetRentalVehicleInfo(ref citizenData);
             VehicleManager instance = Singleton<VehicleManager>.instance;
             BuildingManager instance2 = Singleton<BuildingManager>.instance;
             CitizenManager instance3 = Singleton<CitizenManager>.instance;
@@ -126,15 +128,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
                 instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
                 vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
-                
                 instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
                 instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
                 instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;
                 instance.m_vehicles.m_buffer[vehicle].m_transferSize = (ushort)(citizenData.m_citizen & 0xFFFFu);
-                if (trailer != null)
-                {
-                    instance.m_vehicles.m_buffer[vehicle].CreateTrailer(vehicle, trailer, invert: false);
-                }
                 vehicleInfo.m_vehicleAI.TrySpawn(vehicle, ref instance.m_vehicles.m_buffer[vehicle]);
                 citizenData.m_path = 0u;
                 instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
@@ -157,5 +154,102 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
             Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(reason, offer);
         }
 
+        private static VehicleInfo GetRentalVehicleInfo(ref CitizenInstance citizenData)
+        {
+            Citizen.Wealth wealthLevel = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].WealthLevel;
+            int camper_probability = GetCamperProbability(wealthLevel);
+            int car_probability = GetCarProbability(citizenData.m_frame1.m_position);
+            int electricCarProbability = GetElectricCarProbability(wealthLevel);
+            ItemClass.Service service = ItemClass.Service.Residential;
+            ItemClass.SubService subService = ItemClass.SubService.ResidentialLow;
+            ItemClass.Level level = ItemClass.Level.Level1;
+            Randomizer r = new(citizenData.m_citizen);
+            if (car_probability >= camper_probability)
+            {
+                if(car_probability >= electricCarProbability)
+                {
+                    int res = r.Int32(1);
+                    if (res == 1)
+                    {
+                        subService = ItemClass.SubService.ResidentialHigh;
+                        level = ItemClass.Level.Level2;
+                    }
+                }
+                else
+                {
+                    int res = r.Int32(1);
+                    if (res == 1)
+                    {
+                        subService = ItemClass.SubService.ResidentialHighEco;
+                        level = ItemClass.Level.Level2;
+                    }
+                    else
+                    {
+                        subService = ItemClass.SubService.ResidentialLowEco;
+                        level = ItemClass.Level.Level1;
+                    }
+                }
+            }
+            else
+            {
+                if (camper_probability >= electricCarProbability)
+                {
+                    int res = r.Int32(1);
+                    if (res == 1)
+                    {
+                        subService = ItemClass.SubService.ResidentialHigh;
+                        level = ItemClass.Level.Level2;
+                    }
+                }
+                else
+                {
+                    int res = r.Int32(1);
+                    if (res == 1)
+                    {
+                        subService = ItemClass.SubService.ResidentialHighEco;
+                        level = ItemClass.Level.Level2;
+                    }
+                    else
+                    {
+                        subService = ItemClass.SubService.ResidentialLowEco;
+                        level = ItemClass.Level.Level1;
+                    }
+                }
+            }
+            return Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref r, service, subService, level);
+        }
+
+        private static int GetCarProbability(Vector3 position)
+        {
+            byte park = Singleton<DistrictManager>.instance.GetPark(position);
+            if (park != 0 && Singleton<DistrictManager>.instance.m_parks.m_buffer[park].IsAirport && (Singleton<DistrictManager>.instance.m_parks.m_buffer[park].m_parkPolicies & DistrictPolicies.Park.CarRentals) != 0)
+            {
+                return 90;
+            }
+            return 20;
+        }
+
+
+        private static int GetCamperProbability(Citizen.Wealth wealth)
+        {
+            return wealth switch
+            {
+                Citizen.Wealth.Low => 20,
+                Citizen.Wealth.Medium => 30,
+                Citizen.Wealth.High => 40,
+                _ => 0,
+            };
+        }
+
+        private static int GetElectricCarProbability(Citizen.Wealth wealth)
+        {
+            return wealth switch
+            {
+                Citizen.Wealth.Low => 10,
+                Citizen.Wealth.Medium => 15,
+                Citizen.Wealth.High => 20,
+                _ => 0,
+            };
+        }
     }
 }
