@@ -120,27 +120,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
             CitizenManager instance3 = Singleton<CitizenManager>.instance;
             Building building = instance2.m_buildings.m_buffer[citizenData.m_targetBuilding];
             Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-            if (ExtedndedVehicleManager.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, building.m_position, ExtendedTransferManager.TransferReason.CarRent, transferToSource: false, transferToTarget: false))
+            if (ExtedndedVehicleManager.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, building.m_position, ExtendedTransferManager.TransferReason.CarRent, transferToSource: true, transferToTarget: false))
             {
-                Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
-                instance.m_vehicles.m_buffer[vehicle].m_frame0 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame1 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
-                vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
-                instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
-                instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
-                instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;
-                instance.m_vehicles.m_buffer[vehicle].m_transferSize = (ushort)(citizenData.m_citizen & 0xFFFFu);
+                ref var data = ref vehicles.m_buffer[vehicle];
+                vehicleInfo.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
+                Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].AddOwnVehicle(vehicle, ref vehicles.m_buffer[vehicle]);
                 vehicleInfo.m_vehicleAI.TrySpawn(vehicle, ref instance.m_vehicles.m_buffer[vehicle]);
-                citizenData.m_path = 0u;
                 instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
                 instance3.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, vehicle, 0u);
                 citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
                 citizenData.m_waitCounter = 0;
-                Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].AddOwnVehicle(vehicle, ref vehicles.m_buffer[vehicle]);
+                EnterVehicle(instanceID, ref citizenData);
             }
         }
 
@@ -250,6 +242,32 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 Citizen.Wealth.High => 20,
                 _ => 0,
             };
+        }
+
+        private static bool EnterVehicle(ushort instanceID, ref CitizenInstance citizenData)
+        {
+            citizenData.m_flags &= ~CitizenInstance.Flags.EnteringVehicle;
+            citizenData.Unspawn(instanceID);
+            uint citizen = citizenData.m_citizen;
+            if (citizen != 0)
+            {
+                VehicleManager instance = Singleton<VehicleManager>.instance;
+                ushort num = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizen].m_vehicle;
+                if (num != 0)
+                {
+                    num = instance.m_vehicles.m_buffer[num].GetFirstVehicle(num);
+                }
+                if (num != 0)
+                {
+                    VehicleInfo info = instance.m_vehicles.m_buffer[num].Info;
+                    int ticketPrice = info.m_vehicleAI.GetTicketPrice(num, ref instance.m_vehicles.m_buffer[num]);
+                    if (ticketPrice != 0)
+                    {
+                        Singleton<EconomyManager>.instance.AddResource(EconomyManager.Resource.PublicIncome, ticketPrice, info.m_class);
+                    }
+                }
+            }
+            return false;
         }
     }
 }

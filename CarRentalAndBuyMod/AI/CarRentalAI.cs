@@ -302,8 +302,8 @@ namespace CarRentalAndBuyMod.AI
 					//	offer.Active = false;
 					//	Singleton<TransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
 					//}
-
-					if (count < num10)
+					m_rentedCarCount = count;
+                    if (count < num10)
 					{
 						ExtendedTransferManager.Offer offer2 = default;
 						offer2.Building = buildingID;
