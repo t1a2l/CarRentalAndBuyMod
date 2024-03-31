@@ -1,6 +1,8 @@
 ﻿using CitiesHarmony.API;
 using ICities;
 using CarRentalAndBuyMod.Utils;
+using System;
+using UnityEngine;
 
 namespace CarRentalAndBuyMod
 {
@@ -19,5 +21,31 @@ namespace CarRentalAndBuyMod
             if (HarmonyHelper.IsHarmonyInstalled) PatchUtil.UnpatchAll();
         }
 
+        public override void OnCreated(ILoading loading)
+        {
+            base.OnCreated(loading);
+            try
+            {
+                CitizenDestinationManager.Init();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+                CitizenDestinationManager.Deinit();
+            }
+        }
+
+        public override void OnReleased()
+        {
+            base.OnReleased();
+            try
+            {
+                CitizenDestinationManager.Deinit();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+            }
+        }
     }
 }
