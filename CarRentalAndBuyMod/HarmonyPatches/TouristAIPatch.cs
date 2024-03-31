@@ -37,7 +37,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
             }
         }
 
-        [HarmonyPatch(typeof(HumanAI), "SpawnVehicle")]
+        [HarmonyPatch(typeof(HumanAI), "ArriveAtDestination")]
         [HarmonyPrefix]
         public static bool ArriveAtDestination(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool success)
         {
@@ -50,6 +50,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
                 Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle].m_sourceBuilding = 0;
                 Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].RemoveOwnVehicle(citizen.m_vehicle, ref vehicle);
+                vehicle.Unspawn(citizen.m_vehicle);
+                FindVisitPlace(citizenData.m_citizen, citizenData.m_targetBuilding, GetLeavingReason(citizenData.m_citizen, ref citizen));
                 return false;
             }
             return true;
@@ -295,5 +297,26 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
             };
         }
 
+        private static TransferManager.TransferReason GetLeavingReason(uint citizenID, ref Citizen data)
+        {
+            return data.WealthLevel switch
+            {
+                Citizen.Wealth.Low => TransferManager.TransferReason.LeaveCity0,
+                Citizen.Wealth.Medium => TransferManager.TransferReason.LeaveCity1,
+                Citizen.Wealth.High => TransferManager.TransferReason.LeaveCity2,
+                _ => TransferManager.TransferReason.LeaveCity0,
+            };
+        }
+
+        private static void FindVisitPlace(uint citizenID, ushort sourceBuilding, TransferManager.TransferReason reason)
+        {
+            TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+            offer.Priority = Singleton<SimulationManager>.instance.m_randomizer.Int32(8u);
+            offer.Citizen = citizenID;
+            offer.Position = Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].m_position;
+            offer.Amount = 1;
+            offer.Active = true;
+            Singleton<TransferManager>.instance.AddIncomingOffer(reason, offer);
+        }
     }
 }
