@@ -7,6 +7,7 @@ using MoreTransferReasons;
 using System;
 using System.Reflection;
 using UnityEngine;
+using static RenderManager;
 
 namespace CarRentalAndBuyMod.HarmonyPatches {
 
@@ -19,16 +20,53 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
         private delegate VehicleInfo GetVehicleInfoDelegate(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(TouristAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
+        [HarmonyPatch(typeof(TouristAI), "SetTarget")]
+        [HarmonyPostfix]
+        public static void SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
+        {
+            var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen];
+            if (data.m_targetBuilding != 0 && citizen.m_vehicle != 0)
+            {
+                var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
+                var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                var car_source_building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicle.m_sourceBuilding];
+                if (targetBuilding.Info.GetAI() is OutsideConnectionAI && vehicle.m_sourceBuilding != 0 && car_source_building.Info.GetAI() is CarRentalAI)
+                {
+                    __instance.SetTarget(instanceID, ref data, vehicle.m_sourceBuilding);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(HumanAI), "SpawnVehicle")]
+        [HarmonyPrefix]
+        public static bool ArriveAtDestination(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool success)
+        {
+            var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
+            // i am here to return the car and leave the city
+            if (__instance.m_info.GetAI() is TouristAI && targetBuilding.Info.GetAI() is CarRentalAI && citizen.m_vehicle != 0 && vehicle.m_sourceBuilding == citizenData.m_targetBuilding)
+            {
+                Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
+                Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle].m_sourceBuilding = 0;
+                Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].RemoveOwnVehicle(citizen.m_vehicle, ref vehicle);
+                return false;
+            }
+            return true;
+        }
+
         [HarmonyPatch(typeof(TouristAI), "SpawnVehicle")]
         [HarmonyPrefix]
         public static bool SpawnVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
         {
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            // if you come from outside you can spawn a car
             if (citizenData.m_sourceBuilding != 0 && sourceBuilding.Info.GetAI() is OutsideConnectionAI)
             {
                 return true;
             }
+            // if you exit the rental building and not leaving the city get a rental car
             if (citizenData.m_sourceBuilding != 0 && sourceBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not OutsideConnectionAI)
             {
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, pathPos);
@@ -101,6 +139,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                 __result = true;
                 return false;
             }
+            // do not find a rental place if you are leaving the city
             if (targetBuilding.Info.GetAI() is not OutsideConnectionAI)
             {
                 FindCarRentalPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarRent);
