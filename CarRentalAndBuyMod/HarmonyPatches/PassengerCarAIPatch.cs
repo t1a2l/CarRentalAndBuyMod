@@ -1,91 +1,59 @@
-﻿using ColossalFramework;
+﻿using CarRentalAndBuyMod.AI;
+using ColossalFramework;
 using HarmonyLib;
-using UnityEngine;
+using System;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
-        public static ushort Chosen_Building = 0;
-
-        [HarmonyPatch(typeof(PassengerCarAI), "GetColor",
-            [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
-            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
+        [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
         [HarmonyPrefix]
-        public static bool VehicleGetColor(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        public static bool CanLeave(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref bool __result)
         {
-            if (vehicleID == 0)
+            var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding];
+
+            if (sourceBuilding.Info.GetAI() is CarRentalAI)
             {
-                return true;
-            }
-
-            if (infoMode == InfoManager.InfoMode.Traffic)
-            {
-                if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
+                CitizenManager instance = Singleton<CitizenManager>.instance;
+                uint num = vehicleData.m_citizenUnits;
+                int num2 = 0;
+                while (num != 0)
                 {
-                    return true;
+                    uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        uint citizenId = instance.m_units.m_buffer[num].GetCitizen(i);
+                        if (citizenId != 0)
+                        {
+                            ushort instance2 = instance.m_citizens.m_buffer[citizenId].m_instance;
+                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) == 0)
+                            {
+                                instance.m_instances.m_buffer[instance2].m_flags |= CitizenInstance.Flags.EnteringVehicle;
+                                instance.m_citizens.m_buffer[citizenId].m_visitBuilding = vehicleData.m_sourceBuilding;
+                                instance.m_instances.m_buffer[instance2].Spawn(instance2);
+                                __result = false;
+                                return false;
+                            }
+                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.Character) != 0)
+                            {
+                                __result = false;
+                                return false;
+                            }
+                        }
+                    }
+                    num = nextUnit;
+                    if (++num2 > 524288)
+                    {
+                        CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                        break;
+                    }
                 }
-
-                if (WorldInfoPanel.GetCurrentInstanceID().Building != 0)
-                {
-                    Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
-                }
-
-                ushort source_building = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleID].m_sourceBuilding;
-
-                if (source_building == Chosen_Building)
-                {
-                    __result = Color.yellow;
-                }
-                else
-                {
-                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
-                }
+                __result = true;
                 return false;
             }
-
             return true;
         }
-
-
-        //[HarmonyPatch(typeof(PassengerCarAI), "GetColor",
-        //    [typeof(ushort), typeof(VehicleParked), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
-        //    [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
-        //[HarmonyPrefix]
-        //public static bool VehicleParkedGetColor(PassengerCarAI __instance, ushort parkedVehicleID, ref VehicleParked data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
-        //{
-        //    if (parkedVehicleID == 0)
-        //    {
-        //        return true;
-        //    }
-
-        //    if (infoMode == InfoManager.InfoMode.Connections)
-        //    {
-        //        if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
-        //        {
-        //            return true;
-        //        }
-
-        //        if (WorldInfoPanel.GetCurrentInstanceID().Building != 0)
-        //        {
-        //            Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
-        //        }
-
-        //        ushort source_building = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parkedVehicleID].m_;
-
-        //        if (source_building == Chosen_Building)
-        //        {
-        //            __result = Color.yellow;
-        //        }
-        //        else
-        //        {
-        //            __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
-        //        }
-        //        return false;
-        //    }
-
-        //    return true;
-        //}
     }
 }

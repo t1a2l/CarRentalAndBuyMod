@@ -14,9 +14,7 @@ namespace CarRentalAndBuyMod.AI
             {
                 case ExtendedTransferManager.TransferReason.CarRent:
                     data.m_flags &= ~Citizen.Flags.Evacuating;
-                    ushort building = offer.Building;
-                    var source_building = data.GetBuildingByLocation();
-                    if (building != 0 && StartMoving(citizenID, ref data, source_building, building))
+                    if (StartMoving(citizenID, ref data, data.m_visitBuilding, offer.Building))
                     {
                         data.SetVisitplace(citizenID, offer.Building, 0u);
                     }
