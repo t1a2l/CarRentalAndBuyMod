@@ -28,10 +28,16 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         if (citizenId != 0)
                         {
                             ushort instance2 = instance.m_citizens.m_buffer[citizenId].m_instance;
-                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) != 0)
+                            var citizen_source_building_id = instance.m_instances.m_buffer[instance2].m_sourceBuilding;
+                            var citizen_source_building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizen_source_building_id];
+                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) != 0 && citizen_source_building.Info.GetAI() is CarRentalAI)
                             {
                                 __result = false;
                                 return false;
+                            }
+                            else
+                            {
+                                return true;
                             }
                         }
                     }
