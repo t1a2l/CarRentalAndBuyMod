@@ -28,15 +28,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         if (citizenId != 0)
                         {
                             ushort instance2 = instance.m_citizens.m_buffer[citizenId].m_instance;
-                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) == 0)
-                            {
-                                instance.m_instances.m_buffer[instance2].m_flags |= CitizenInstance.Flags.EnteringVehicle;
-                                instance.m_citizens.m_buffer[citizenId].m_visitBuilding = vehicleData.m_sourceBuilding;
-                                instance.m_instances.m_buffer[instance2].Spawn(instance2);
-                                __result = false;
-                                return false;
-                            }
-                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.Character) != 0)
+                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) != 0)
                             {
                                 __result = false;
                                 return false;

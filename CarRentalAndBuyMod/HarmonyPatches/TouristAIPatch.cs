@@ -8,7 +8,6 @@ using MoreTransferReasons;
 using System;
 using System.Reflection;
 using UnityEngine;
-using static RenderManager;
 
 namespace CarRentalAndBuyMod.HarmonyPatches {
 
@@ -20,9 +19,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
 
         private delegate VehicleInfo GetVehicleInfoDelegate(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(TouristAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
-
-        private delegate void UpdateLocationDelegate(TouristAI __instance, uint citizenID, ref Citizen data);
-        private static readonly UpdateLocationDelegate UpdateLocation = AccessTools.MethodDelegate<UpdateLocationDelegate>(typeof(TouristAI).GetMethod("UpdateLocation", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         [HarmonyPatch(typeof(CitizenAI), "StartPathFind", 
             [typeof(ushort), typeof(CitizenInstance), typeof(Vector3), typeof(Vector3), typeof(VehicleInfo), typeof(bool), typeof(bool)], 
@@ -82,14 +78,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
                     vehicle.Unspawn(citizen.m_vehicle);
 
                     // move to outside connection
-                    touristAI.StartMoving(citizenData.m_citizen, ref citizen, citizenData.m_targetBuilding, targeBuildingId);
+                    touristAI.StartMoving(citizenData.m_citizen, ref citizen, citizenData.m_targetBuilding, targeBuildingId);                 
                 }
                 else
                 {
                     SpawnRentalVehicle(touristAI, instanceID, ref citizenData);
                     citizenData.Unspawn(instanceID);
                 }
-
                 return false;
             }
             return true;
@@ -217,8 +212,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches {
 
                 vehicleInfo.m_vehicleAI.TrySpawn(vehicleId, ref data);
                 citizenData.m_path = 0u;
+
                 citizen.SetParkedVehicle(citizenData.m_citizen, 0);
-                citizen.SetVehicle(citizenData.m_citizen, vehicleId, 0u);
+                citizen.SetVehicle(citizenData.m_citizen, vehicleId, 0);
+                citizenData.Spawn(instanceID);
+                citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
+
             }
         }
 
