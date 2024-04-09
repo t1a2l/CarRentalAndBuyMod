@@ -37,7 +37,7 @@ namespace CarRentalAndBuyMod.AI
 		[CustomizableProperty("Rental Price")]
 		public int m_rentalCarPrice = 1500;
 
-		int m_rentedCarCount = 0;
+        public int m_rentedCarCount = 0;
 
 		public TransferManager.TransferReason m_incomingResource = TransferManager.TransferReason.LuxuryProducts;
 
