@@ -1,5 +1,4 @@
-﻿using CarRentalAndBuyMod.Utils;
-using ColossalFramework;
+﻿using ColossalFramework;
 using ColossalFramework.DataBinding;
 using MoreTransferReasons;
 using System;
@@ -276,34 +275,10 @@ namespace CarRentalAndBuyMod.AI
 					Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
 				}
 				HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-				int count = 0;
-				int cargo = 0;
-				int capacity = 0;
-				int outside = 0;
-                //int count1 = 0;
-                //int cargo1 = 0;
-                //int capacity1 = 0;
-                //int outside1 = 0;
-
-                ExtedndedVehicleManager.CalculateOwnVehicles(buildingID, ref buildingData, ExtendedTransferManager.TransferReason.CarRent, ref count, ref cargo, ref capacity, ref outside); // own rental cars
-				//CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.LuxuryProducts, ref count1, ref cargo1, ref capacity1, ref outside1); // guest car transporters
-				//int num10 = (finalProductionRate * m_rentalCarCount + 99) / 100;
 				int num10 = (finalProductionRate * m_rentalCarCount + 99) / 100;
 				if (buildingData.m_fireIntensity == 0 && m_incomingResource != TransferManager.TransferReason.None)
 				{
-					//int num11 = num10 - count;
-					//if (num11 > 0)
-					//{
-					//	TransferManager.TransferOffer offer = default;
-					//	offer.Priority = 2 - count;
-					//	offer.Building = buildingID;
-					//	offer.Position = buildingData.m_position;
-					//	offer.Amount = 1;
-					//	offer.Active = false;
-					//	Singleton<TransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
-					//}
-					m_rentedCarCount = count;
-                    if (count < num10)
+                    if (m_rentedCarCount < num10)
 					{
 						ExtendedTransferManager.Offer offer2 = default;
 						offer2.Building = buildingID;

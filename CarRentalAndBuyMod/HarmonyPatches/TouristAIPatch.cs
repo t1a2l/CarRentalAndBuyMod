@@ -60,6 +60,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static bool ArriveAtDestination(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool success)
         {
             ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+            var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
             
@@ -86,7 +87,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if(carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
                     {
                         SpawnRentalVehicle(touristAI, instanceID, ref citizenData);
-                        citizenData.Unspawn(instanceID);
                         return false;
                     }
                     return true;
@@ -206,10 +206,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 data.Info.m_vehicleAI.SetSource(vehicleId, ref data, citizenData.m_targetBuilding);
                 Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].AddOwnVehicle(vehicleId, ref data);
 
-                var rental_building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-                CarRentalAI carRentalAI = rental_building.Info.m_buildingAI as CarRentalAI;
-                carRentalAI.m_rentedCarCount++;
-
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                 CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
                 __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
@@ -220,14 +216,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 data.m_transferSize = (ushort)(citizenData.m_citizen & 0xFFFFu);
 
                 vehicleInfo.m_vehicleAI.TrySpawn(vehicleId, ref data);
-                citizenData.m_path = 0u;
-
                 citizen.SetParkedVehicle(citizenData.m_citizen, 0);
                 citizen.SetVehicle(citizenData.m_citizen, vehicleId, 0);
-                citizenData.Spawn(instanceID);
-                citizenData.m_sourceBuilding = data.m_sourceBuilding;
+                citizenData.m_path = 0u;
                 citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                citizenData.m_flags &= ~CitizenInstance.Flags.WaitingPath;
+                citizenData.m_flags &= ~CitizenInstance.Flags.SittingDown;
+                citizenData.m_waitCounter = 0;
 
+                ref var rental_building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
+                CarRentalAI carRentalAI = rental_building.Info.m_buildingAI as CarRentalAI;
+                carRentalAI.m_rentedCarCount++;
             }
         }
 
