@@ -53,5 +53,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return true;
         }
+
+
+        [HarmonyPatch(typeof(VehicleAI), "Unspawn")]
+        [HarmonyPostfix]
+        public static void Unspawn(ushort vehicleID)
+        {
+            var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleID];
+            if(vehicle.m_sourceBuilding != 0 && vehicle.Info.GetAI() is PassengerCarAI)
+            {
+                ref var sourceBuilding = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicle.m_sourceBuilding];
+                if(sourceBuilding.Info.GetAI() is CarRentalAI carRentalAI)
+                {
+                    carRentalAI.m_rentedCarCount--;
+                }
+            }
+        }
     }
 }
