@@ -10,7 +10,6 @@ using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
-
     [HarmonyPatch]
     public static class TouristAIPatch
     {
@@ -19,23 +18,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         private delegate VehicleInfo GetVehicleInfoDelegate(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(TouristAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
-
-        [HarmonyPatch(typeof(CitizenAI), "StartPathFind", 
-            [typeof(ushort), typeof(CitizenInstance), typeof(Vector3), typeof(Vector3), typeof(VehicleInfo), typeof(bool), typeof(bool)], 
-            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
-        [HarmonyPrefix]
-        public static void StartPathFindPrefix(CitizenAI __instance, ushort instanceID, ref CitizenInstance citizenData, ref VehicleInfo vehicleInfo)
-        {
-            if(__instance is TouristAI)
-            {
-                var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-                var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                if (targetBuilding.Info.GetAI() is CarRentalAI && citizen.m_vehicle == 0)
-                {
-                    vehicleInfo = null;
-                }
-            }
-        }
 
         [HarmonyPatch(typeof(TouristAI), "SetTarget")]
         [HarmonyPostfix]
@@ -53,45 +35,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     __instance.SetTarget(instanceID, ref data, vehicle.m_sourceBuilding);
                 }
             }
-        }
-
-        [HarmonyPatch(typeof(HumanAI), "ArriveAtDestination")]
-        [HarmonyPrefix]
-        public static bool ArriveAtDestination(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool success)
-        {
-            ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-            var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
-            
-            if (__instance.m_info.GetAI() is TouristAI touristAI && targetBuilding.Info.GetAI() is CarRentalAI carRentalAI)
-            {
-                // i am here to return the car and leave the city
-                if (citizen.m_vehicle != 0 && vehicle.m_sourceBuilding == citizenData.m_targetBuilding)
-                {
-                    // get original outside connection target
-                    var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                    CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-
-                    Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
-                    Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle].m_sourceBuilding = 0;
-                    Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].RemoveOwnVehicle(citizen.m_vehicle, ref vehicle);
-                    vehicle.Unspawn(citizen.m_vehicle);
-
-                    // move to outside connection
-                    touristAI.StartMoving(citizenData.m_citizen, ref citizen, citizenData.m_targetBuilding, targeBuildingId);
-                    return false;
-                }
-                else
-                {
-                    if(carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
-                    {
-                        SpawnRentalVehicle(touristAI, instanceID, ref citizenData);
-                        return false;
-                    }
-                    return true;
-                }
-            }
-            return true;
         }
 
         [HarmonyPatch(typeof(TouristAI), "SpawnVehicle")]
@@ -190,7 +133,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        private static void SpawnRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData)
+        public static void SpawnRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData)
         {
             VehicleManager instance = Singleton<VehicleManager>.instance;
             CitizenManager instance3 = Singleton<CitizenManager>.instance;
