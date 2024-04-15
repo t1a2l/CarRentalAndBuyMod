@@ -49,9 +49,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(HumanAI), "ArriveAtTarget")]
         [HarmonyPrefix]
-        public static void ArriveAtTarget(ushort instanceID, ref CitizenInstance citizenData)
+        public static void ArriveAtTarget(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData)
         {
-
+            ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+            var visitBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizen.m_visitBuilding];
+            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            if (__instance.m_info.GetAI() is TouristAI && visitBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not CarRentalAI)
+            {
+                citizen.m_visitBuilding = citizenData.m_targetBuilding;
+            }
         }
     }
 }
