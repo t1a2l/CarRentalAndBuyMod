@@ -42,9 +42,18 @@ namespace CarRentalAndBuyMod.Serializer
                         {
                             while (Index < Data.Length)
                             {
-                                CheckStartTuple("FireBurnStartTimeSerializer", SaveGameFileVersion, Data, ref Index);
+                                CheckStartTuple("CitizenDestinationManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 CitizenDestinationManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
-                                CheckEndTuple("FireBurnStartTimeSerializer", SaveGameFileVersion, Data, ref Index);
+                                CheckEndTuple("CitizenDestinationManagerSerializer", SaveGameFileVersion, Data, ref Index);
+
+                                if (Index == Data.Length)
+                                {
+                                    break;
+                                }
+
+                                CheckStartTuple("VehicleRentalManagerSerializer", SaveGameFileVersion, Data, ref Index);
+                                VehicleRentalManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
+                                CheckEndTuple("VehicleRentalManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 break;
                             }
                         }
@@ -90,6 +99,11 @@ namespace CarRentalAndBuyMod.Serializer
                     StorageData.WriteUInt16(DataVersion, Data);
 
                     // car rental citizen original destination
+                    StorageData.WriteUInt32(uiTUPLE_START, Data);
+                    CitizenDestinationManagerSerializer.SaveData(Data);
+                    StorageData.WriteUInt32(uiTUPLE_END, Data);
+
+                    // rented cars
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     CitizenDestinationManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
