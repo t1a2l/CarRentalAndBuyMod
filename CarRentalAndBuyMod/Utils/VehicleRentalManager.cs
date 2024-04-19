@@ -24,10 +24,15 @@ namespace CarRentalAndBuyMod.Utils
             return !VehicleRentals.TryGetValue(citizenId, out var rental) ? default : rental;
         }
 
-        public static void CreateVehicleRental(uint citizenId, Rental rental)
+        public static void CreateVehicleRental(uint citizenId, ushort rentedVehicleID, ushort carRentalBuildingID)
         {
             if (!VehicleRentals.TryGetValue(citizenId, out _))
             {
+                var rental = new Rental()
+                {
+                    RentedVehicleID = rentedVehicleID,
+                    CarRentalBuildingID = carRentalBuildingID
+                };
                 VehicleRentals.Add(citizenId, rental);
             }
         }
