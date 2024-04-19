@@ -40,23 +40,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
             // if you come from outside from road connection you can spawn a car
             if (citizenData.m_sourceBuilding != 0 && IsRoadConnection(citizenData.m_sourceBuilding))
             {
                 return true;
-            }
-            // if you exit the rental building and not leaving the city get a rental car
-            if (citizenData.m_sourceBuilding != 0 && sourceBuilding.Info.GetAI() is CarRentalAI && !IsRoadConnection(citizenData.m_targetBuilding))
-            {
-                VehicleInfo vehicleInfo1 = GetRentalVehicleInfo(ref citizenData);
-                SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo1, pathPos);
-                Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_targetBuilding);
-                ref var rental_building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-                CarRentalAI carRentalAI = rental_building.Info.m_buildingAI as CarRentalAI;
-                carRentalAI.m_rentedCarCount++;
-                __result = true;
-                return false;
             }
             VehicleManager instance = Singleton<VehicleManager>.instance;
             float num = 20f;
@@ -119,8 +107,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 __result = true;
                 return false;
             }
-
-            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
 
             // tourist have a rental vehicle spawn it and use it and set the vehicle instead of the parked vehicle
             if(!rental.Equals(default(VehicleRentalManager.Rental)))
@@ -187,14 +173,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         frameData.m_rotation = Quaternion.LookRotation(forward);
                     }
                 }
-
-                var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                if (targeBuildingId != 0)
-                {
-                    CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-                    __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
-                }
-
                 instance.m_vehicles.m_buffer[vehicle].m_frame0 = frameData;
                 instance.m_vehicles.m_buffer[vehicle].m_frame1 = frameData;
                 instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
@@ -232,17 +210,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        private static void FindCarRentalPlace(uint citizenID, ushort sourceBuilding, ExtendedTransferManager.TransferReason reason)
-        {
-            ExtendedTransferManager.Offer offer = default;
-            offer.Citizen = citizenID;
-            offer.Position = Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].m_position;
-            offer.Amount = 1;
-            offer.Active = true;
-            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(reason, offer);
-        }
-
-        private static VehicleInfo GetRentalVehicleInfo(ref CitizenInstance citizenData)
+        public static VehicleInfo GetRentalVehicleInfo(ref CitizenInstance citizenData)
         {
             Citizen.Wealth wealthLevel = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].WealthLevel;
             int camper_probability = GetCamperProbability(wealthLevel);
@@ -305,6 +273,31 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
             }
             return Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref r, service, subService, level);
+        }
+
+        //public static void SpawnNewRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref CarRentalAI carRentalAI)
+        //{
+        //    VehicleInfo vehicleInfo = GetRentalVehicleInfo(ref citizenData);
+        //    var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
+        //    if (targeBuildingId != 0)
+        //    {
+        //        CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
+        //        __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
+        //    }
+        //    SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
+        //    Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+        //    VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_targetBuilding);
+        //    carRentalAI.m_rentedCarCount++;
+        //}
+
+        private static void FindCarRentalPlace(uint citizenID, ushort sourceBuilding, ExtendedTransferManager.TransferReason reason)
+        {
+            ExtendedTransferManager.Offer offer = default;
+            offer.Citizen = citizenID;
+            offer.Position = Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].m_position;
+            offer.Amount = 1;
+            offer.Active = true;
+            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(reason, offer);
         }
 
         private static int GetCarProbability(Vector3 position)
@@ -415,6 +408,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return false;
         }
+
+        
 
     }
 }
