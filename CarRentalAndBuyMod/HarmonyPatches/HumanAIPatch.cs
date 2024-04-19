@@ -36,16 +36,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     if (carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
                     {
-                        VehicleInfo vehicleInfo = TouristAIPatch.GetRentalVehicleInfo(ref citizenData);
-                        var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                        if (targeBuildingId != 0)
-                        {
-                            CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-                            __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
-                        }
-                        Singleton<PathManager>.instance.m_pathUnits.m_buffer[citizenData.m_path].GetPosition(citizenData.m_pathPositionIndex >> 1, out var position);
-                        TouristAIPatch.SpawnRentalVehicle(touristAI, instanceID, ref citizenData, vehicleInfo, position);
-                        VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_targetBuilding);
+                        VehicleInfo vehicleInfo = TouristAIPatch.GetRentalVehicleInfo(ref citizenData); 
+                        TouristAIPatch.SpawnRentalVehicle(touristAI, instanceID, ref citizenData, vehicleInfo, default);
+                        VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_sourceBuilding);
                         carRentalAI.m_rentedCarCount++;
                         return false;
                     }
@@ -61,7 +54,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
             var visitBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizen.m_visitBuilding];
-            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding]; 
             if (__instance.m_info.GetAI() is TouristAI && visitBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not CarRentalAI)
             {
                 citizen.m_visitBuilding = citizenData.m_targetBuilding;

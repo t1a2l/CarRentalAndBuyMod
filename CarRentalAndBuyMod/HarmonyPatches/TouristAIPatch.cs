@@ -111,6 +111,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             // tourist have a rental vehicle spawn it and use it and set the vehicle instead of the parked vehicle
             if(!rental.Equals(default(VehicleRentalManager.Rental)))
             {
+                Debug.Log("SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
                 rental.RentedVehicleID = citizen.m_vehicle;
@@ -154,35 +155,48 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 num8 = 0;
             }
             uint laneID = PathManager.GetLaneID(pathPos);
-           
             instance2.m_lanes.m_buffer[laneID].GetClosestPosition(vector2, out var position, out var laneOffset);
             byte lastPathOffset = (byte)Mathf.Clamp(Mathf.RoundToInt(laneOffset * 255f), 0, 255);
             position = vector2 + Vector3.ClampMagnitude(position - vector2, 5f);
             if (instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false))
             {
-                Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
-                if (num8 != 0)
+                var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
+                if (targeBuildingId != 0)
                 {
-                    frameData.m_rotation = rotation;
+                    ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
+                    data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
+                    citizenData.m_flags &= ~CitizenInstance.Flags.WaitingPath;
+                    citizenData.m_flags &= ~CitizenInstance.Flags.SittingDown;
+                    CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
+                    __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
                 }
                 else
                 {
-                    Vector3 forward = position - citizenData.GetLastFrameData().m_position;
-                    if (forward.sqrMagnitude > 0.01f)
+                    Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
+                    if (num8 != 0)
                     {
-                        frameData.m_rotation = Quaternion.LookRotation(forward);
+                        frameData.m_rotation = rotation;
                     }
+                    else
+                    {
+                        Vector3 forward = position - citizenData.GetLastFrameData().m_position;
+                        if (forward.sqrMagnitude > 0.01f)
+                        {
+                            frameData.m_rotation = Quaternion.LookRotation(forward);
+                        }
+                    }
+                    instance.m_vehicles.m_buffer[vehicle].m_frame0 = frameData;
+                    instance.m_vehicles.m_buffer[vehicle].m_frame1 = frameData;
+                    instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
+                    instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
+                    vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
+                    instance.m_vehicles.m_buffer[vehicle].m_targetPos0 = new Vector4(position.x, position.y, position.z, 2f);
+                    instance.m_vehicles.m_buffer[vehicle].m_lastPathOffset = lastPathOffset;
                 }
-                instance.m_vehicles.m_buffer[vehicle].m_frame0 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame1 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
-                instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
-                vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
-                instance.m_vehicles.m_buffer[vehicle].m_targetPos0 = new Vector4(position.x, position.y, position.z, 2f);
+                
                 instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
                 instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
                 instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;
-                instance.m_vehicles.m_buffer[vehicle].m_lastPathOffset = lastPathOffset;
                 instance.m_vehicles.m_buffer[vehicle].m_transferSize = (ushort)(citizenData.m_citizen & 0xFFFFu);
                 vehicleInfo.m_vehicleAI.TrySpawn(vehicle, ref instance.m_vehicles.m_buffer[vehicle]);
                 if (num8 != 0)
@@ -198,13 +212,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 instance3.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, vehicle, 0u);
                 citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
-                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
-                citizenData.m_waitCounter = 0;
-            }
-            instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
-            if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
-            {
-                citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
                 citizenData.m_waitCounter = 0;
             }
@@ -274,21 +281,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref r, service, subService, level);
         }
-
-        //public static void SpawnNewRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref CarRentalAI carRentalAI)
-        //{
-        //    VehicleInfo vehicleInfo = GetRentalVehicleInfo(ref citizenData);
-        //    var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-        //    if (targeBuildingId != 0)
-        //    {
-        //        CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-        //        __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
-        //    }
-        //    SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
-        //    Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-        //    VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_targetBuilding);
-        //    carRentalAI.m_rentedCarCount++;
-        //}
 
         private static void FindCarRentalPlace(uint citizenID, ushort sourceBuilding, ExtendedTransferManager.TransferReason reason)
         {

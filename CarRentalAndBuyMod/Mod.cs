@@ -27,11 +27,13 @@ namespace CarRentalAndBuyMod
             try
             {
                 CitizenDestinationManager.Init();
+                VehicleRentalManager.Init();
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
                 CitizenDestinationManager.Deinit();
+                VehicleRentalManager.Deinit();
             }
         }
 
@@ -41,6 +43,7 @@ namespace CarRentalAndBuyMod
             try
             {
                 CitizenDestinationManager.Deinit();
+                VehicleRentalManager.Deinit();
             }
             catch (Exception e)
             {

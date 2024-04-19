@@ -3,6 +3,7 @@ using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
 using HarmonyLib;
 using System;
+using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
