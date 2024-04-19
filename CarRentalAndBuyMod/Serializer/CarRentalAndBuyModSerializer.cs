@@ -125,7 +125,7 @@ namespace CarRentalAndBuyMod.Serializer
                 uint iTupleStart = StorageData.ReadUInt32(Data, ref iIndex);
                 if (iTupleStart != uiTUPLE_START)
                 {
-                    throw new Exception($"Start tuple not found at: {sTupleLocation}");
+                    throw new Exception($"CarRentalAndBuyMod Start tuple not found at: {sTupleLocation}");
                 }
             }
         }
@@ -137,7 +137,7 @@ namespace CarRentalAndBuyMod.Serializer
                 uint iTupleEnd = StorageData.ReadUInt32(Data, ref iIndex);
                 if (iTupleEnd != uiTUPLE_END)
                 {
-                    throw new Exception($"End tuple not found at: {sTupleLocation}");
+                    throw new Exception($"CarRentalAndBuyMod End tuple not found at: {sTupleLocation}");
                 }
             }
         }
