@@ -2,6 +2,7 @@
 using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
 using HarmonyLib;
+using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
@@ -22,6 +23,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 // i am here to return the car and leave the city
                 if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == citizenData.m_targetBuilding)
                 {
+                    Debug.Log("ReturnRentalVehicle");
                     // get original outside connection target
                     var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                     CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
@@ -36,6 +38,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     if (carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
                     {
+                        Debug.Log("RentNewRentalVehicle");
                         VehicleInfo vehicleInfo = TouristAIPatch.GetRentalVehicleInfo(ref citizenData); 
                         TouristAIPatch.SpawnRentalVehicle(touristAI, instanceID, ref citizenData, vehicleInfo, default);
                         VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_sourceBuilding);
@@ -57,6 +60,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding]; 
             if (__instance.m_info.GetAI() is TouristAI && visitBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not CarRentalAI)
             {
+                Debug.Log("ArrivingAtTarget");
                 citizen.m_visitBuilding = citizenData.m_targetBuilding;
             }
         }

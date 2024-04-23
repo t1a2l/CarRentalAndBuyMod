@@ -1,4 +1,5 @@
 ﻿using CarRentalAndBuyMod.AI;
+using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
 using HarmonyLib;
 using UnityEngine;
@@ -17,9 +18,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             if (__instance is TouristAI)
             {
                 var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-                var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                if (targetBuilding.Info.GetAI() is CarRentalAI && citizen.m_vehicle == 0)
+                var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
+                if (targetBuilding.Info.GetAI() is CarRentalAI && rental.Equals(default(VehicleRentalManager.Rental)))
                 {
+                    Debug.Log("vehicleInfoNull");
                     vehicleInfo = null;
                 }
             }

@@ -28,6 +28,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 if (IsRoadConnection(data.m_targetBuilding))
                 {
+                    Debug.Log("SetTargetRoadConnection");
                     CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
                     __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
                 }
@@ -111,6 +112,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             // tourist have a rental vehicle spawn it and use it and set the vehicle instead of the parked vehicle
             if(!rental.Equals(default(VehicleRentalManager.Rental)))
             {
+                // edge case
+                if(rental.RentedVehicleID == parked_vehicle && sourceBuilding.Info.GetAI() is CarRentalAI)
+                {
+                    __result = true;
+                    return false;
+                }
                 Debug.Log("SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
@@ -163,15 +170,16 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                 if (targeBuildingId != 0)
                 {
+                    Debug.Log("SpawnRentalVehicleSpecial");
                     ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
                     data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
-                    citizenData.m_flags &= ~CitizenInstance.Flags.WaitingPath;
-                    citizenData.m_flags &= ~CitizenInstance.Flags.SittingDown;
+                    citizenData.m_sourceBuilding = citizenData.m_targetBuilding;
                     CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
                     __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
                 }
                 else
                 {
+                    Debug.Log("SpawnRentalVehicleNormal");
                     Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
                     if (num8 != 0)
                     {
@@ -212,6 +220,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 instance3.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, vehicle, 0u);
                 citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                citizenData.m_waitCounter = 0;
+            }
+            instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
+            if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
+            {
+                citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
                 citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
                 citizenData.m_waitCounter = 0;
             }
@@ -400,8 +415,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return false;
         }
-
-        
 
     }
 }

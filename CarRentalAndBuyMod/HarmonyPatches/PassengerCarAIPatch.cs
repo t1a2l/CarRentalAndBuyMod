@@ -73,9 +73,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     uint citizen = instance2.m_units.m_buffer[num2].GetCitizen(i);
                     if (citizen != 0)
                     {
+                        var rental = VehicleRentalManager.GetVehicleRental(citizen);
                         ushort instance5 = instance2.m_citizens.m_buffer[citizen].m_instance;
-                        if (instance5 != 0)
+                        if (instance5 != 0 && !rental.Equals(default(VehicleRentalManager.Rental)))
                         {
+                            Debug.Log("GetRentalParkingVehicle");
                             __state = instance2.m_instances.m_buffer[instance5].m_citizen;
                             break;
                         }
@@ -105,6 +107,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 if(!rental.Equals(default(VehicleRentalManager.Rental)))
                 {
+                    Debug.Log("SetRentalParkingVehicle");
                     rental.RentedVehicleID = parkedVehicle;
                     VehicleRentalManager.SetVehicleRental(__state, rental);
                 }
