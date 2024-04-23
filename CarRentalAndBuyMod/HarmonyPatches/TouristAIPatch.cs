@@ -118,6 +118,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     __result = true;
                     return false;
                 }
+                vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[rental.RentedVehicleID].Info;
                 Debug.Log("SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
