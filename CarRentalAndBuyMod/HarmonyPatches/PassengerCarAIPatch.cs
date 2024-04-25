@@ -1,8 +1,10 @@
 ﻿using CarRentalAndBuyMod.AI;
 using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
+using ColossalFramework.Math;
 using HarmonyLib;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -10,6 +12,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
+        public static ushort Chosen_Building = 0;
+
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
         [HarmonyPrefix]
         public static bool CanLeave(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref bool __result)
@@ -112,6 +116,83 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     VehicleRentalManager.SetVehicleRental(__state, rental);
                 }
             }
+        }
+
+
+        [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
+            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
+        [HarmonyPrefix]
+        public static bool GetColor(ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        {
+            if (vehicleID == 0)
+            {
+                return true;
+            }
+
+            if (infoMode == InfoManager.InfoMode.Density)
+            {
+                if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
+                {
+                    return true;
+                }
+
+                if (WorldInfoPanel.GetCurrentInstanceID().Building != 0)
+                {
+                    Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
+                }
+
+                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == vehicleID).FirstOrDefault().Value;
+
+                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                {
+                    __result = Color.yellow;
+                }
+                else
+                {
+                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(VehicleParked), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
+            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
+        [HarmonyPrefix]
+        public static bool GetColor(ushort parkedVehicleID, ref VehicleParked data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        {
+            if (parkedVehicleID == 0)
+            {
+                return true;
+            }
+
+            if (infoMode == InfoManager.InfoMode.Density)
+            {
+                if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
+                {
+                    return true;
+                }
+
+                if (WorldInfoPanel.GetCurrentInstanceID().Building != 0)
+                {
+                    Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
+                }
+
+                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == parkedVehicleID).FirstOrDefault().Value;
+
+                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                {
+                    __result = Color.yellow;
+                }
+                else
+                {
+                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                }
+                return false;
+            }
+
+            return true;
         }
     }
 }

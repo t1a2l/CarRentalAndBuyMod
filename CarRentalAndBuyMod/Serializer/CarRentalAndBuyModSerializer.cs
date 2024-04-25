@@ -105,7 +105,7 @@ namespace CarRentalAndBuyMod.Serializer
 
                     // rented cars
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
-                    CitizenDestinationManagerSerializer.SaveData(Data);
+                    VehicleRentalManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
                     m_serializableData.SaveData(DataID, Data.ToArray());

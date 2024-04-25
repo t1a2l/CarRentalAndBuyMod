@@ -1,7 +1,9 @@
-﻿using ColossalFramework;
+﻿using CarRentalAndBuyMod.Utils;
+using ColossalFramework;
 using ColossalFramework.DataBinding;
 using MoreTransferReasons;
 using System;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -165,7 +167,8 @@ namespace CarRentalAndBuyMod.AI
 		{
 			base.BuildingLoaded(buildingID, ref data, version);
 			EnsureCitizenUnits(buildingID, ref data);
-		}
+            m_rentedCarCount = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).Count();
+        }
 
 		public override void EndRelocating(ushort buildingID, ref Building data)
 		{
@@ -301,7 +304,8 @@ namespace CarRentalAndBuyMod.AI
 
 		public override string GetLocalizedStats(ushort buildingID, ref Building data)
 		{
-			StringBuilder stringBuilder = new StringBuilder();
+			StringBuilder stringBuilder = new();
+            m_rentedCarCount = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).Count();
             stringBuilder.Append(string.Format("Rented Cars: {0} of {1}", m_rentedCarCount, m_rentalCarCount));
             stringBuilder.Append(Environment.NewLine);
 			return stringBuilder.ToString();

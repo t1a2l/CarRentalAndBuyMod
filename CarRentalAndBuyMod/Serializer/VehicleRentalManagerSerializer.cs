@@ -14,6 +14,8 @@ namespace CarRentalAndBuyMod.Serializer
 
         public static void SaveData(FastList<byte> Data)
         {
+            Debug.Log("save VehicleRentals_Count: " + VehicleRentalManager.VehicleRentals.Count);
+
             // Write out metadata
             StorageData.WriteUInt16(iVEHICLE_RENTAL_MANAGER_DATA_VERSION, Data);
             StorageData.WriteInt32(VehicleRentalManager.VehicleRentals.Count, Data);
@@ -23,6 +25,10 @@ namespace CarRentalAndBuyMod.Serializer
             {
                 // Write start tuple
                 StorageData.WriteUInt32(uiTUPLE_START, Data);
+
+                Debug.Log("save citizenId: " + kvp.Key);
+                Debug.Log("save rentedVehicleID: " + kvp.Value.RentedVehicleID);
+                Debug.Log("save carRentalBuildingID: " + kvp.Value.CarRentalBuildingID);
 
                 // Write actual settings
                 StorageData.WriteUInt32(kvp.Key, Data);
@@ -45,6 +51,7 @@ namespace CarRentalAndBuyMod.Serializer
                     VehicleRentalManager.VehicleRentals = [];
                 }
                 int VehicleRentals_Count = StorageData.ReadInt32(Data, ref iIndex);
+                Debug.Log("load VehicleRentals_Count: " + VehicleRentals_Count);
                 for (int i = 0; i < VehicleRentals_Count; i++)
                 {
                     CheckStartTuple($"Buffer({i})", VehicleRentals_Count, Data, ref iIndex);
@@ -52,6 +59,10 @@ namespace CarRentalAndBuyMod.Serializer
                     uint citizenId = StorageData.ReadUInt32(Data, ref iIndex);
                     ushort rentedVehicleID = StorageData.ReadUInt16(Data, ref iIndex);
                     ushort carRentalBuildingID = StorageData.ReadUInt16(Data, ref iIndex);
+
+                    Debug.Log("load citizenId: " + citizenId);
+                    Debug.Log("load rentedVehicleID: " + rentedVehicleID);
+                    Debug.Log("load carRentalBuildingID: " + carRentalBuildingID);
 
                     var rental = new VehicleRentalManager.Rental()
                     {
