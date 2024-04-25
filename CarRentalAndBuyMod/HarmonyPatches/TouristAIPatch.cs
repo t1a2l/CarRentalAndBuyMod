@@ -35,6 +35,30 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
+        [HarmonyPatch(typeof(TouristAI), "GetVehicleInfo")]
+        [HarmonyPrefix]
+        public static bool GetVehicleInfoPrefix(ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, ref VehicleInfo trailer, ref VehicleInfo __result)
+        {
+            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
+            if (!rental.Equals(default(VehicleRentalManager.Rental)))
+            {
+                CitizenManager instance3 = Singleton<CitizenManager>.instance;
+                ushort vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle;
+                ushort parked_vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
+                if (vehicle == rental.RentedVehicleID)
+                {
+                    __result = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[rental.RentedVehicleID].Info;
+                    return false;
+                }
+                else if (parked_vehicle == rental.RentedVehicleID)
+                {
+                    __result = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[rental.RentedVehicleID].Info;
+                    return false;
+                }
+            }
+            return true;
+        }
+
         [HarmonyPatch(typeof(TouristAI), "SpawnVehicle")]
         [HarmonyPrefix]
         public static bool SpawnVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
@@ -118,7 +142,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     __result = true;
                     return false;
                 }
-                vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[rental.RentedVehicleID].Info;
                 Debug.Log("SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
@@ -142,6 +165,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         public static void SpawnRentalVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, VehicleInfo vehicleInfo, PathUnit.Position pathPos)
         {
+            var original_sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             VehicleManager instance = Singleton<VehicleManager>.instance;
             NetManager instance2 = Singleton<NetManager>.instance;
             CitizenManager instance3 = Singleton<CitizenManager>.instance;
@@ -227,7 +251,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
             if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
             {
-                citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
+                if(original_sourceBuilding.Info.GetAI() is CarRentalAI)
+                {
+                    citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
+                }
                 citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
                 citizenData.m_waitCounter = 0;
             }
