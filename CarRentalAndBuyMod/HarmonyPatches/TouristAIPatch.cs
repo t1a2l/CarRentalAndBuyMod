@@ -5,6 +5,7 @@ using ColossalFramework.Math;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class TouristAIPatch
     {
+        public static ushort Chosen_Building = 0;
+
         private delegate bool TryJoinVehicleDelegate(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, ushort vehicleID, ref Vehicle vehicleData);
         private static readonly TryJoinVehicleDelegate TryJoinVehicle = AccessTools.MethodDelegate<TryJoinVehicleDelegate>(typeof(TouristAI).GetMethod("TryJoinVehicle", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
@@ -34,6 +37,46 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
             }
         }
+
+        [HarmonyPatch(typeof(TouristAI), "GetColor")]
+        [HarmonyPrefix]
+        public static bool GetColor(ushort instanceID, ref CitizenInstance data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        {
+            if (instanceID == 0)
+            {
+                return true;
+            }
+
+            if (infoMode == InfoManager.InfoMode.Density)
+            {
+                if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
+                {
+                    return true;
+                }
+
+                if (WorldInfoPanel.GetCurrentInstanceID().Building != 0)
+                {
+                    Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
+                }
+
+                var citizenId = data.m_citizen;
+
+                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Key == citizenId).FirstOrDefault().Value;
+
+                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                {
+                    __result = Color.yellow;
+                }
+                else
+                {
+                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
 
         [HarmonyPatch(typeof(TouristAI), "GetVehicleInfo")]
         [HarmonyPrefix]
