@@ -128,7 +128,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return true;
             }
 
-            if (infoMode == InfoManager.InfoMode.Density)
+            if (infoMode == InfoManager.InfoMode.Tourism && subInfoMode == InfoManager.SubInfoMode.Attractiveness)
             {
                 if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
                 {
@@ -166,7 +166,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return true;
             }
 
-            if (infoMode == InfoManager.InfoMode.Density)
+            if (infoMode == InfoManager.InfoMode.Tourism && subInfoMode == InfoManager.SubInfoMode.Attractiveness)
             {
                 if (Chosen_Building == 0 && WorldInfoPanel.GetCurrentInstanceID().Building == 0)
                 {
