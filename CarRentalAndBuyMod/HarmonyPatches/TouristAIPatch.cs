@@ -77,7 +77,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-
         [HarmonyPatch(typeof(TouristAI), "GetVehicleInfo")]
         [HarmonyPrefix]
         public static bool GetVehicleInfoPrefix(ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, ref VehicleInfo trailer, ref VehicleInfo __result)
