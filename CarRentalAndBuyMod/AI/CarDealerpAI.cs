@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace CarRentalAndBuyMod.AI
 {
-    public class CarDealerpAI : PlayerBuildingAI
+    public class CarDealerpAI : PlayerBuildingAI, IExtendedBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
 		public int m_workPlaceCount0 = 5;
@@ -35,7 +35,7 @@ namespace CarRentalAndBuyMod.AI
 
         public int m_dealerCarBoughtCount = 0;
 
-		public TransferManager.TransferReason m_incomingResource = TransferManager.TransferReason.LuxuryProducts;
+		public ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.Cars;
 
 		public void GetImmaterialResourceRadius(ushort buildingID, ref Building data, out ImmaterialResourceManager.Resource resource1, out float radius1)
 		{
@@ -197,40 +197,29 @@ namespace CarRentalAndBuyMod.AI
 			}
 		}
 
-		public override void ModifyMaterialBuffer(ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int amountDelta)
-		{
-			switch (material)
-			{
-				default:
-					if (material == m_incomingResource)
-					{
-						int goodsCapacity = m_dealerCarCapacity;
-						int customBuffer = data.m_customBuffer1;
-						amountDelta = Mathf.Clamp(amountDelta, 0, goodsCapacity - customBuffer);
-						data.m_customBuffer1 = (ushort)(customBuffer + amountDelta);
-					}
-					else
-					{
-						base.ModifyMaterialBuffer(buildingID, ref data, material, ref amountDelta);
-					}
-					break;
-			}
-		}
+        public void ExtendedStartTransfer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
+        {
 
-        public override void GetMaterialAmount(ushort buildingID, ref Building data, TransferManager.TransferReason material, out int amount, out int max)
-		{
-			if (material == m_incomingResource)
-			{
-				amount = data.m_customBuffer1;
-				max = m_dealerCarCapacity;
-			}
-			else
-			{
-				base.GetMaterialAmount(buildingID, ref data, material, out amount, out max);
-			}
-		}
+        }
 
-		public override void BuildingDeactivated(ushort buildingID, ref Building data)
+        public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
+        {
+            amount = data.m_customBuffer1;
+            max = m_dealerCarCapacity;
+        }
+
+        public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
+        {
+            if (material == m_incomingResource)
+            {
+                int goodsCapacity = m_dealerCarCapacity;
+                int customBuffer = data.m_customBuffer1;
+                amountDelta = Mathf.Clamp(amountDelta, 0, goodsCapacity - customBuffer);
+                data.m_customBuffer1 = (ushort)(customBuffer + amountDelta);
+            }
+        }
+
+        public override void BuildingDeactivated(ushort buildingID, ref Building data)
 		{
 			TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
 			offer.Building = buildingID;
