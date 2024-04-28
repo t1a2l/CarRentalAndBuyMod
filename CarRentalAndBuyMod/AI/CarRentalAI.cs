@@ -35,9 +35,6 @@ namespace CarRentalAndBuyMod.AI
 		[CustomizableProperty("Rental Capacity Count")]
 		public int m_rentalCarCount = 10;
 
-		[CustomizableProperty("Rental Price")]
-		public int m_rentalCarPrice = 1500;
-
         public int m_rentedCarCount = 0;
 
 		public TransferManager.TransferReason m_incomingResource = TransferManager.TransferReason.LuxuryProducts;
@@ -184,7 +181,8 @@ namespace CarRentalAndBuyMod.AI
 		{
 			base.EndRelocating(buildingID, ref data);
 			EnsureCitizenUnits(buildingID, ref data);
-		}
+            m_rentedCarCount = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).Count();
+        }
 
 		private void EnsureCitizenUnits(ushort buildingID, ref Building data)
 		{
