@@ -1,4 +1,5 @@
-﻿using ColossalFramework;
+﻿using CarRentalAndBuyMod.Utils;
+using ColossalFramework;
 using ColossalFramework.DataBinding;
 using MoreTransferReasons;
 using System;
@@ -7,7 +8,7 @@ using UnityEngine;
 
 namespace CarRentalAndBuyMod.AI
 {
-    public class CarDealerpAI : PlayerBuildingAI, IExtendedBuildingAI
+    public class CarDealerAI : PlayerBuildingAI, IExtendedBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
 		public int m_workPlaceCount0 = 5;
@@ -79,9 +80,9 @@ namespace CarRentalAndBuyMod.AI
 					{
 						if (Singleton<InfoManager>.instance.CurrentSubMode == InfoManager.SubInfoMode.Default)
 						{
-							if (m_incomingResource != TransferManager.TransferReason.None && (data.m_tempImport != 0 || data.m_finalImport != 0))
+							if (m_incomingResource != ExtendedTransferManager.TransferReason.None && (data.m_tempImport != 0 || data.m_finalImport != 0))
 							{
-								return Singleton<TransferManager>.instance.m_properties.m_resourceColors[(int)m_incomingResource];
+								return Singleton<ExtendedTransferManager>.instance.m_properties.m_resourceColors[(int)m_incomingResource];
 							}
 							return Singleton<InfoManager>.instance.m_properties.m_neutralColor;
 						}
@@ -104,9 +105,9 @@ namespace CarRentalAndBuyMod.AI
 
 		public override void GetPlacementInfoMode(out InfoManager.InfoMode mode, out InfoManager.SubInfoMode subMode, float elevation)
 		{
-			if (m_incomingResource == TransferManager.TransferReason.LuxuryProducts)
+			if (m_incomingResource == ExtendedTransferManager.TransferReason.Cars)
 			{
-				mode = InfoManager.InfoMode.Tourism;
+				mode = InfoManager.InfoMode.Density;
 				subMode = InfoManager.SubInfoMode.Default;
 			}
 			else
@@ -118,18 +119,18 @@ namespace CarRentalAndBuyMod.AI
 		public override string GetDebugString(ushort buildingID, ref Building data)
 		{
 			string text = base.GetDebugString(buildingID, ref data);
-			TransferManager.TransferReason incomingResource = m_incomingResource;
+            ExtendedTransferManager.TransferReason incomingResource = m_incomingResource;
 			TransferManager.TransferReason transferReason1 = TransferManager.TransferReason.TouristA;
 			TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.TouristB;
 			TransferManager.TransferReason transferReason3 = TransferManager.TransferReason.TouristC;
 			TransferManager.TransferReason transferReason4 = TransferManager.TransferReason.TouristD;
-			if (incomingResource != TransferManager.TransferReason.None)
+			if (incomingResource != ExtendedTransferManager.TransferReason.None)
 			{
 				int count = 0;
 				int cargo = 0;
 				int capacity = 0;
 				int outside = 0;
-				CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
+                ExtedndedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
 				text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource.ToString(), data.m_customBuffer1, cargo);
 			}
 			if (transferReason1 != TransferManager.TransferReason.None)
@@ -221,16 +222,13 @@ namespace CarRentalAndBuyMod.AI
 
         public override void BuildingDeactivated(ushort buildingID, ref Building data)
 		{
-			TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+            ExtendedTransferManager.Offer offer = default;
 			offer.Building = buildingID;
-			if (m_incomingResource != TransferManager.TransferReason.None)
+			if (m_incomingResource != ExtendedTransferManager.TransferReason.None)
 			{
-				Singleton<TransferManager>.instance.RemoveIncomingOffer(m_incomingResource, offer);
+				Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(m_incomingResource, offer);
 			}
-			Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.TouristA, offer);
-			Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.TouristB, offer);
-			Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.TouristC, offer);
-			Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.TouristD, offer);
+			Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(ExtendedTransferManager.TransferReason.CarBuy, offer);
 			base.BuildingDeactivated(buildingID, ref data);
 		}
 
@@ -262,7 +260,7 @@ namespace CarRentalAndBuyMod.AI
 				}
 				HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
 				int num10 = (finalProductionRate * m_dealerCarCapacity + 99) / 100;
-				if (buildingData.m_fireIntensity == 0 && m_incomingResource != TransferManager.TransferReason.None)
+				if (buildingData.m_fireIntensity == 0 && m_incomingResource != ExtendedTransferManager.TransferReason.None)
 				{
                     if (m_dealerCarBoughtCount < num10)
 					{
@@ -271,7 +269,7 @@ namespace CarRentalAndBuyMod.AI
 						offer2.Position = buildingData.m_position;
 						offer2.Amount = 1;
 						offer2.Active = false;
-						Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.CarRent, offer2);
+						Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.CarBuy, offer2);
 					}
 
 				}
