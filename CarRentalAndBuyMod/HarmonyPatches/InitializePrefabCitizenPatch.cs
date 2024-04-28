@@ -17,6 +17,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var newAI = (PrefabAI)__instance.gameObject.AddComponent<ExtenedTouristAI>();
                 PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
             }
+            else if (oldAI != null && oldAI is ResidentAI)
+            {
+                Object.DestroyImmediate(oldAI);
+                var newAI = (PrefabAI)__instance.gameObject.AddComponent<ExtenedResidentAI>();
+                PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+            }
         }
     }
 }
