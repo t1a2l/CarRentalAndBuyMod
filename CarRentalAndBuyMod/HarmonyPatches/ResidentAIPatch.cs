@@ -94,7 +94,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarDealerships(citizenData.m_frame0.m_position))
             {
                 CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
-                FindCarDealershipPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarRent);
+                FindCarDealershipPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarBuy);
                 __result = false;
                 return false;
             }
