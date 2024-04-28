@@ -163,7 +163,17 @@ namespace CarRentalAndBuyMod.AI
 			Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, m_visitPlaceCount, 0, 0);
 		}
 
-		public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
+        public override void ReleaseBuilding(ushort buildingID, ref Building data)
+        {
+            base.ReleaseBuilding(buildingID, ref data);
+            var rentals = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).ToList();
+            foreach (var rental in rentals)
+            {
+                VehicleRentalManager.VehicleRentals.Remove(rental.Key);
+            }
+        }
+
+        public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
 		{
 			base.BuildingLoaded(buildingID, ref data, version);
 			EnsureCitizenUnits(buildingID, ref data);

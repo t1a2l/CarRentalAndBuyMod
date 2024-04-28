@@ -10,6 +10,7 @@ namespace CarRentalAndBuyMod.Utils
         {
             public ushort RentedVehicleID;
             public ushort CarRentalBuildingID;
+            public bool IsRemovedToSpawn;
         }
 
         public static void Init()
@@ -31,7 +32,8 @@ namespace CarRentalAndBuyMod.Utils
                 var rental = new Rental()
                 {
                     RentedVehicleID = rentedVehicleID,
-                    CarRentalBuildingID = carRentalBuildingID
+                    CarRentalBuildingID = carRentalBuildingID,
+                    IsRemovedToSpawn = false
                 };
                 VehicleRentals.Add(citizenId, rental);
             }

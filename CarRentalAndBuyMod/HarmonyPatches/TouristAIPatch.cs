@@ -185,10 +185,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     __result = true;
                     return false;
                 }
+
+                rental.IsRemovedToSpawn = true;
+                VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
                 Debug.Log("SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
                 rental.RentedVehicleID = citizen.m_vehicle;
+                rental.IsRemovedToSpawn = false;
                 VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
                 __result = true;
                 return false;

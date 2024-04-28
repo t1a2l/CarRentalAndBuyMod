@@ -1,5 +1,6 @@
 ﻿using System;
 using CarRentalAndBuyMod.Utils;
+using ColossalFramework;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.Serializer
@@ -10,7 +11,7 @@ namespace CarRentalAndBuyMod.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_RENTAL_MANAGER_DATA_VERSION = 1;
+        private const ushort iVEHICLE_RENTAL_MANAGER_DATA_VERSION = 2;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -26,14 +27,11 @@ namespace CarRentalAndBuyMod.Serializer
                 // Write start tuple
                 StorageData.WriteUInt32(uiTUPLE_START, Data);
 
-                Debug.Log("save citizenId: " + kvp.Key);
-                Debug.Log("save rentedVehicleID: " + kvp.Value.RentedVehicleID);
-                Debug.Log("save carRentalBuildingID: " + kvp.Value.CarRentalBuildingID);
-
                 // Write actual settings
                 StorageData.WriteUInt32(kvp.Key, Data);
                 StorageData.WriteUInt16(kvp.Value.RentedVehicleID, Data);
                 StorageData.WriteUInt16(kvp.Value.CarRentalBuildingID, Data);
+                StorageData.WriteBool(kvp.Value.IsRemovedToSpawn, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -60,15 +58,29 @@ namespace CarRentalAndBuyMod.Serializer
                     ushort rentedVehicleID = StorageData.ReadUInt16(Data, ref iIndex);
                     ushort carRentalBuildingID = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    Debug.Log("load citizenId: " + citizenId);
-                    Debug.Log("load rentedVehicleID: " + rentedVehicleID);
-                    Debug.Log("load carRentalBuildingID: " + carRentalBuildingID);
-
                     var rental = new VehicleRentalManager.Rental()
                     {
                         RentedVehicleID = rentedVehicleID,
                         CarRentalBuildingID = carRentalBuildingID
                     };
+
+                    if (iVehicleRentalManagerVersion == 2)
+                    {
+                        bool isRemovedToSpawned = StorageData.ReadBool(Data, ref iIndex);
+                        rental.IsRemovedToSpawn = isRemovedToSpawned;
+                    }
+                    else
+                    {
+                        var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[rental.RentedVehicleID];
+                        if (vehicle.Info.GetAI() is PassengerCarAI)
+                        {
+                            rental.IsRemovedToSpawn = false;
+                        }
+                        else
+                        {
+                            rental.IsRemovedToSpawn = true;
+                        }
+                    }
 
                     VehicleRentalManager.VehicleRentals.Add(citizenId, rental);
 
