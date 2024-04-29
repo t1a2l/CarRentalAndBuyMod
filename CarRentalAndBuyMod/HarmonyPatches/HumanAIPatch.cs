@@ -36,7 +36,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 else
                 {
-                    if (carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
+                    if (carRentalAI.m_rentedCarCount < targetBuilding.m_customBuffer1)
                     {
                         Debug.Log("RentNewRentalVehicle");
                         VehicleInfo vehicleInfo = TouristAIPatch.GetRentalVehicleInfo(ref citizenData); 
@@ -50,7 +50,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             else if (__instance.m_info.GetAI() is ResidentAI residentAI && targetBuilding.Info.GetAI() is CarDealerAI carDealerAI)
             {
-                if (carDealerAI.m_dealerCarBoughtCount < carDealerAI.m_dealerCarCapacity)
+                if (targetBuilding.m_customBuffer1 > 0)
                 {
                     Debug.Log("BuyNewVehicle");
                     ResidentAIPatch.SpawnBoughtVehicle(residentAI, instanceID, ref citizenData, default);

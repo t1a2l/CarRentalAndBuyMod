@@ -445,8 +445,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
                             {
+                                Building building = instance.m_buildings.m_buffer[num12];
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is CarRentalAI carRentalAI && carRentalAI.m_rentedCarCount < carRentalAI.m_rentalCarCount)
+                                if (info.GetAI() is CarRentalAI carRentalAI && carRentalAI.m_rentedCarCount < building.m_customBuffer1)
                                 {
                                     return true;
                                 }
