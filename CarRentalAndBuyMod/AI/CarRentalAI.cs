@@ -33,7 +33,7 @@ namespace CarRentalAndBuyMod.AI
 		public float m_noiseRadius = 100f;
 
 		[CustomizableProperty("Rental Capacity Count")]
-		public int m_rentalCarCount = 20;
+		public int m_rentalCarCapacity = 20;
 
         public int m_rentedCarCount = 0;
 
@@ -204,14 +204,14 @@ namespace CarRentalAndBuyMod.AI
         public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
         {
             amount = data.m_customBuffer1;
-            max = m_rentalCarCount;
+            max = m_rentalCarCapacity;
         }
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
             if (material == m_incomingResource)
             {
-                int goodsCapacity = m_rentalCarCount;
+                int goodsCapacity = m_rentalCarCapacity;
                 int customBuffer = data.m_customBuffer1;
                 amountDelta = Mathf.Clamp(amountDelta, 0, goodsCapacity - customBuffer);
                 data.m_customBuffer1 = (ushort)(customBuffer + amountDelta);
@@ -257,10 +257,10 @@ namespace CarRentalAndBuyMod.AI
 					Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
 				}
 				HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-				int num10 = (finalProductionRate * m_rentalCarCount + 99) / 100;
-				if (buildingData.m_fireIntensity == 0 && m_incomingResource != ExtendedTransferManager.TransferReason.None)
+                int customBuffer = buildingData.m_customBuffer1;
+                if (buildingData.m_fireIntensity == 0 && m_incomingResource != ExtendedTransferManager.TransferReason.None)
 				{
-                    if (m_rentedCarCount < num10)
+                    if (m_rentedCarCount < customBuffer)
 					{
 						ExtendedTransferManager.Offer offer2 = default;
 						offer2.Building = buildingID;
@@ -269,8 +269,16 @@ namespace CarRentalAndBuyMod.AI
 						offer2.Active = false;
 						Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.CarRent, offer2);
 					}
-
-				}
+                    if (customBuffer < m_rentalCarCapacity)
+                    {
+                        ExtendedTransferManager.Offer offer2 = default;
+                        offer2.Building = buildingID;
+                        offer2.Position = buildingData.m_position;
+                        offer2.Amount = 1;
+                        offer2.Active = false;
+                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.Cars, offer2);
+                    }
+                }
 			}
 		}
 
@@ -285,7 +293,9 @@ namespace CarRentalAndBuyMod.AI
 		{
 			StringBuilder stringBuilder = new();
             m_rentedCarCount = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).Count();
-            stringBuilder.Append(string.Format("Rented Cars: {0} of {1}", m_rentedCarCount, m_rentalCarCount));
+            stringBuilder.Append(string.Format("Car Rental Capacity: {0} ", m_rentalCarCapacity));
+            stringBuilder.Append(Environment.NewLine);
+            stringBuilder.Append(string.Format("Rented Cars: {0} of {1}", m_rentedCarCount, data.m_customBuffer1));
             stringBuilder.Append(Environment.NewLine);
 			return stringBuilder.ToString();
 		}

@@ -34,8 +34,6 @@ namespace CarRentalAndBuyMod.AI
 		[CustomizableProperty("Dealer Car Capacity")]
 		public int m_dealerCarCapacity = 40;
 
-        public int m_dealerCarBoughtCount = 0;
-
 		public ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.Cars;
 
 		public void GetImmaterialResourceRadius(ushort buildingID, ref Building data, out ImmaterialResourceManager.Resource resource1, out float radius1)
@@ -259,10 +257,10 @@ namespace CarRentalAndBuyMod.AI
 					Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
 				}
 				HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-				int num10 = (finalProductionRate * m_dealerCarCapacity + 99) / 100;
+                int customBuffer = buildingData.m_customBuffer1;
 				if (buildingData.m_fireIntensity == 0 && m_incomingResource != ExtendedTransferManager.TransferReason.None)
 				{
-                    if (m_dealerCarBoughtCount < num10)
+                    if (customBuffer > 0)
 					{
 						ExtendedTransferManager.Offer offer2 = default;
 						offer2.Building = buildingID;
@@ -271,8 +269,16 @@ namespace CarRentalAndBuyMod.AI
 						offer2.Active = false;
 						Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.CarBuy, offer2);
 					}
-
-				}
+                    if (customBuffer < m_dealerCarCapacity)
+                    {
+                        ExtendedTransferManager.Offer offer2 = default;
+                        offer2.Building = buildingID;
+                        offer2.Position = buildingData.m_position;
+                        offer2.Amount = 1;
+                        offer2.Active = false;
+                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.Cars, offer2);
+                    }
+                }
 			}
 		}
 
@@ -286,7 +292,9 @@ namespace CarRentalAndBuyMod.AI
 		public override string GetLocalizedStats(ushort buildingID, ref Building data)
 		{
 			StringBuilder stringBuilder = new();
-            stringBuilder.Append(string.Format("Bought Cars: {0} of {1}", m_dealerCarBoughtCount, m_dealerCarCapacity));
+            stringBuilder.Append(string.Format("DealerShip Cars Avaliable: {0} ", data.m_customBuffer1));
+            stringBuilder.Append(Environment.NewLine);
+            stringBuilder.Append(string.Format("DealerShip Cars Capcity: {0} ", m_dealerCarCapacity));
             stringBuilder.Append(Environment.NewLine);
 			return stringBuilder.ToString();
 		}
