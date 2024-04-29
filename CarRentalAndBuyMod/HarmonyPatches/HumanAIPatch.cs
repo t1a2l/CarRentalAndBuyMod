@@ -48,6 +48,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     return true;
                 }
             }
+            else if (__instance.m_info.GetAI() is ResidentAI residentAI && targetBuilding.Info.GetAI() is CarDealerAI carDealerAI)
+            {
+                if (carDealerAI.m_dealerCarBoughtCount < carDealerAI.m_dealerCarCapacity)
+                {
+                    Debug.Log("BuyNewVehicle");
+                    ResidentAIPatch.SpawnBoughtVehicle(residentAI, instanceID, ref citizenData, default);
+                    carDealerAI.m_dealerCarCapacity--;
+                    return false;
+                }
+                return true;
+            }
             return true;
         }
 
@@ -60,7 +71,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             if (__instance.m_info.GetAI() is TouristAI && visitBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not CarRentalAI)
             {
-                Debug.Log("ArrivingAtTarget");
+                Debug.Log("ArrivingAtTargetTouristAI");
+                citizen.m_visitBuilding = citizenData.m_targetBuilding;
+            }
+            else if (__instance.m_info.GetAI() is ResidentAI && visitBuilding.Info.GetAI() is CarDealerAI && targetBuilding.Info.GetAI() is not CarDealerAI)
+            {
+                Debug.Log("ArrivingAtTargetResidentAI");
                 citizen.m_visitBuilding = citizenData.m_targetBuilding;
             }
         }

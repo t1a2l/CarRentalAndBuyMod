@@ -102,7 +102,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        public static void SpawnBoughtVehicle(TouristAI __instance, ushort instanceID, ref CitizenInstance citizenData, VehicleInfo vehicleInfo, PathUnit.Position pathPos)
+        public static void SpawnBoughtVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
         {
             var original_sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             VehicleManager instance = Singleton<VehicleManager>.instance;
@@ -129,6 +129,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             instance2.m_lanes.m_buffer[laneID].GetClosestPosition(vector2, out var position, out var laneOffset);
             byte lastPathOffset = (byte)Mathf.Clamp(Mathf.RoundToInt(laneOffset * 255f), 0, 255);
             position = vector2 + Vector3.ClampMagnitude(position - vector2, 5f);
+            VehicleInfo vehicleInfo = GetVehicleInfo(__instance, instanceID, ref citizenData, forceProbability: false, out VehicleInfo trailer);
             if (instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false))
             {
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
@@ -242,7 +243,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
                             {
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is CarDealerAI carDealerAI && carDealerAI.m_dealerCarBoughtCount < carDealerAI.m_dealerCarCapacity)
+                                if (info.GetAI() is CarDealerAI carDealerAI && carDealerAI.m_dealerCarCapacity > 0)
                                 {
                                     return true;
                                 }
