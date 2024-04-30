@@ -1,7 +1,7 @@
-﻿using CarRentalAndBuyMod.Utils;
-using ColossalFramework;
+﻿using ColossalFramework;
 using ColossalFramework.DataBinding;
-using MoreTransferReasons;
+using MoreTransferReasons.Managers;
+using MoreTransferReasons.Utils;
 using System;
 using System.Text;
 using UnityEngine;
