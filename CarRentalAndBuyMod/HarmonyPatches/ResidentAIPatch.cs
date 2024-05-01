@@ -9,6 +9,7 @@ using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
+    [HarmonyPatch]
     public static class ResidentAIPatch
     {
         private delegate bool TryJoinVehicleDelegate(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, ushort vehicleID, ref Vehicle vehicleData);
