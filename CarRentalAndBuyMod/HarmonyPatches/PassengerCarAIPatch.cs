@@ -60,6 +60,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         }
 
         // get the tourist that parking his car
+        [HarmonyBefore(["me.tmpe"])]
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPrefix]
         public static void ParkVehiclePrefix(ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, ref uint __state)
