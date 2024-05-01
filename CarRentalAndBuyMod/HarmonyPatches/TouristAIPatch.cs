@@ -3,7 +3,7 @@ using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
 using ColossalFramework.Math;
 using HarmonyLib;
-using MoreTransferReasons.Managers;
+using MoreTransferReasons;
 using System;
 using System.Linq;
 using System.Reflection;

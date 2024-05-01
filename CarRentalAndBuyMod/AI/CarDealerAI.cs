@@ -1,7 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.DataBinding;
-using MoreTransferReasons.Managers;
-using MoreTransferReasons.Utils;
+using MoreTransferReasons;
 using System;
 using System.Text;
 using UnityEngine;

@@ -2,7 +2,7 @@
 using CarRentalAndBuyMod.Utils;
 using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons.Managers;
+using MoreTransferReasons;
 using System;
 using System.Reflection;
 using UnityEngine;
