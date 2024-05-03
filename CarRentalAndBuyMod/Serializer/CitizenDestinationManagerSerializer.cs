@@ -46,7 +46,7 @@ namespace CarRentalAndBuyMod.Serializer
                 int CitizenDestination_Count = StorageData.ReadInt32(Data, ref iIndex);
                 for (int i = 0; i < CitizenDestination_Count; i++)
                 {
-                    CheckStartTuple($"Buffer({i})", CitizenDestination_Count, Data, ref iIndex);
+                    CheckStartTuple($"Buffer({i})", iCitizenDestinationManagerVersion, Data, ref iIndex);
 
                     uint citizenId = StorageData.ReadUInt32(Data, ref iIndex);
 

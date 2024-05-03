@@ -52,7 +52,7 @@ namespace CarRentalAndBuyMod.Serializer
                 Debug.Log("load VehicleRentals_Count: " + VehicleRentals_Count);
                 for (int i = 0; i < VehicleRentals_Count; i++)
                 {
-                    CheckStartTuple($"Buffer({i})", VehicleRentals_Count, Data, ref iIndex);
+                    CheckStartTuple($"Buffer({i})", iVehicleRentalManagerVersion, Data, ref iIndex);
 
                     uint citizenId = StorageData.ReadUInt32(Data, ref iIndex);
                     ushort rentedVehicleID = StorageData.ReadUInt16(Data, ref iIndex);
