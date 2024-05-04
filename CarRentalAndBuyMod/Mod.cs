@@ -1,5 +1,6 @@
 ﻿using CitiesHarmony.API;
 using ICities;
+using CarRentalAndBuyMod.Managers;
 using CarRentalAndBuyMod.Utils;
 using System;
 using UnityEngine;
@@ -28,12 +29,16 @@ namespace CarRentalAndBuyMod
             {
                 CitizenDestinationManager.Init();
                 VehicleRentalManager.Init();
+                GasStationFuelManager.Init();
+                VehicleFuelManager.Init();
             }
             catch (Exception e)
             {
                 Debug.LogError(e.ToString());
                 CitizenDestinationManager.Deinit();
                 VehicleRentalManager.Deinit();
+                GasStationFuelManager.Deinit();
+                VehicleFuelManager.Deinit();
             }
         }
 
@@ -44,6 +49,8 @@ namespace CarRentalAndBuyMod
             {
                 CitizenDestinationManager.Deinit();
                 VehicleRentalManager.Deinit();
+                GasStationFuelManager.Deinit();
+                VehicleFuelManager.Deinit();
             }
             catch (Exception e)
             {

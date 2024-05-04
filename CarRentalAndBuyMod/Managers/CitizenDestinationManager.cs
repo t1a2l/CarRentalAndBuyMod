@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CarRentalAndBuyMod.Utils
+namespace CarRentalAndBuyMod.Managers
 {
     public static class CitizenDestinationManager
     {

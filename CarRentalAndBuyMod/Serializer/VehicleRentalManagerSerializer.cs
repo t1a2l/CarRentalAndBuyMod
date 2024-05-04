@@ -1,5 +1,5 @@
 ﻿using System;
-using CarRentalAndBuyMod.Utils;
+using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using UnityEngine;
 
