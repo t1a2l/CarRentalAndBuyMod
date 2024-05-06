@@ -4,6 +4,7 @@ using CarRentalAndBuyMod.Managers;
 using CarRentalAndBuyMod.Utils;
 using System;
 using UnityEngine;
+using CarRentalAndBuyMod.HarmonyPatches;
 
 namespace CarRentalAndBuyMod
 {

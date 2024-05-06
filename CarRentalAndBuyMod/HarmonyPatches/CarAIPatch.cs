@@ -35,20 +35,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(CarAI), "CalculateTargetSpeed")]
-        [HarmonyPostfix]
-        public static void CalculateTargetSpeed(CarAI __instance, ushort vehicleID, ref Vehicle data, float speedLimit, float curve, ref float __result)
-        {
-            if (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI)
-            {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                if(vehicleFuel.CurrentFuelCapacity < 10)
-                {
-                    __result = 0.5f;
-                }
-            }
-        }
-
         [HarmonyPatch(typeof(CarAI), "SimulationStep",
             [typeof(ushort), typeof(Vehicle), typeof(Vehicle.Frame), typeof(ushort), typeof(Vehicle), typeof(int)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal])]
