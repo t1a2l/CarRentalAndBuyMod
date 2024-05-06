@@ -1,4 +1,4 @@
-﻿using CarRentalAndBuyMod.Utils;
+﻿using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using HarmonyLib;
 using System.Linq;

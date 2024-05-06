@@ -1,5 +1,5 @@
 ﻿using CarRentalAndBuyMod.AI;
-using CarRentalAndBuyMod.Utils;
+using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using ColossalFramework.Math;
 using HarmonyLib;
