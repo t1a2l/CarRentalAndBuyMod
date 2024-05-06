@@ -6,12 +6,13 @@ namespace CarRentalAndBuyMod.Managers
     {
         public static Dictionary<ushort, VehicleFuelCapacity> VehiclesFuel;
 
+        public static Dictionary<ushort, VehicleFuelCapacity> ParkedVehiclesFuel;
+
         public struct VehicleFuelCapacity
         {
             public int CurrentFuelCapacity;
             public int MaxFuelCapacity;
         }
-
 
         public static void Init()
         {
@@ -21,6 +22,8 @@ namespace CarRentalAndBuyMod.Managers
         public static void Deinit() => VehiclesFuel = [];
 
         public static VehicleFuelCapacity GetVehicleFuel(ushort vehicleId) => !VehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
+
+        public static VehicleFuelCapacity GetParkedVehicleFuel(ushort vehicleId) => !ParkedVehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
 
         public static void CreateVehicleFuel(ushort vehicleId, int currentFuelCapacity, int maxFuelCapacity)
         {
@@ -35,6 +38,19 @@ namespace CarRentalAndBuyMod.Managers
             }
         }
 
+        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, int currentFuelCapacity, int maxFuelCapacity)
+        {
+            if (!ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
+            {
+                var vehicleFuelCapacity = new VehicleFuelCapacity
+                {
+                    CurrentFuelCapacity = currentFuelCapacity,
+                    MaxFuelCapacity = maxFuelCapacity
+                };
+                ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
+            }
+        }
+
         public static void SetVehicleFuel(ushort vehicleId, int added_fuel)
         {
             var vehicleFuelCapacity = VehiclesFuel[vehicleId];
@@ -42,7 +58,15 @@ namespace CarRentalAndBuyMod.Managers
             VehiclesFuel[vehicleId] = vehicleFuelCapacity;
         }
 
+        public static void SetParkedVehicleFuel(ushort parkedVehicleId, int added_fuel)
+        {
+            var vehicleFuelCapacity = ParkedVehiclesFuel[parkedVehicleId];
+            vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
+            ParkedVehiclesFuel[parkedVehicleId] = vehicleFuelCapacity;
+        }
 
         public static void RemoveVehicleFuel(ushort vehicleId) => VehiclesFuel.Remove(vehicleId);
+
+        public static void RemoveParkedVehicleFuel(ushort parkedVehicleId) => ParkedVehiclesFuel.Remove(parkedVehicleId);
     }
 }

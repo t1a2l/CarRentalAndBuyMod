@@ -92,6 +92,18 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return false;
             }
 
+            if (parked_vehicle != 0)
+            {
+                var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
+                SpawnOwnVehicle(__instance, instanceID, ref citizenData, pathPos);
+                Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity);
+                VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
+                __result = true;
+                return false;
+            }
+
+
             if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarDealerships(citizenData.m_frame0.m_position))
             {
                 CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
@@ -103,7 +115,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        public static void SpawnBoughtVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
+        public static void SpawnOwnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
         {
             var original_sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             VehicleManager instance = Singleton<VehicleManager>.instance;

@@ -32,6 +32,23 @@ namespace CarRentalAndBuyMod.Serializer
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
             }
+
+            StorageData.WriteInt32(VehicleFuelManager.ParkedVehiclesFuel.Count, Data);
+
+            // Write out each buffer settings
+            foreach (var kvp in VehicleFuelManager.ParkedVehiclesFuel)
+            {
+                // Write start tuple
+                StorageData.WriteUInt32(uiTUPLE_START, Data);
+
+                // Write actual settings
+                StorageData.WriteUInt16(kvp.Key, Data);
+                StorageData.WriteInt32(kvp.Value.CurrentFuelCapacity, Data);
+                StorageData.WriteInt32(kvp.Value.MaxFuelCapacity, Data);
+
+                // Write end tuple
+                StorageData.WriteUInt32(uiTUPLE_END, Data);
+            }
         }
 
         public static void LoadData(int iGlobalVersion, byte[] Data, ref int iIndex)
@@ -40,6 +57,7 @@ namespace CarRentalAndBuyMod.Serializer
             {
                 int iVehicleFuelManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
                 Debug.Log("Global: " + iGlobalVersion + " BufferVersion: " + iVehicleFuelManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+
                 if (VehicleFuelManager.VehiclesFuel == null)
                 {
                     VehicleFuelManager.VehiclesFuel = [];
@@ -62,6 +80,32 @@ namespace CarRentalAndBuyMod.Serializer
                     };
 
                     VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
+
+                    CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
+                }
+
+                if (VehicleFuelManager.ParkedVehiclesFuel == null)
+                {
+                    VehicleFuelManager.ParkedVehiclesFuel = [];
+                }
+                int ParkedVehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
+                for (int i = 0; i < ParkedVehiclesFuel_Count; i++)
+                {
+                    CheckStartTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
+
+                    ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
+
+                    int currentFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+
+                    int maxFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+
+                    var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                    {
+                        CurrentFuelCapacity = currentFuelCapacity,
+                        MaxFuelCapacity = maxFuelCapacity
+                    };
+
+                    VehicleFuelManager.ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
 
                     CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
                 }

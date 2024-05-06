@@ -53,7 +53,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 if (targetBuilding.m_customBuffer1 > 0)
                 {
                     Debug.Log("BuyNewVehicle");
-                    ResidentAIPatch.SpawnBoughtVehicle(residentAI, instanceID, ref citizenData, default);
+                    ResidentAIPatch.SpawnOwnVehicle(residentAI, instanceID, ref citizenData, default);
                     carDealerAI.m_dealerCarCapacity--;
                     return false;
                 }

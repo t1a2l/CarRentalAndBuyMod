@@ -186,6 +186,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     return false;
                 }
 
+                var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
+
                 rental.IsRemovedToSpawn = true;
                 VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
                 Debug.Log("SpawnVehicleHasRental");
@@ -194,6 +196,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 rental.RentedVehicleID = citizen.m_vehicle;
                 rental.IsRemovedToSpawn = false;
                 VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
+                
+                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity);
+                VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
                 __result = true;
                 return false;
             }

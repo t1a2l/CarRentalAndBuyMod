@@ -109,12 +109,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 ushort parkedVehicle = instance2.m_citizens.m_buffer[__state].m_parkedVehicle;
 
                 var rental = VehicleRentalManager.GetVehicleRental(__state);
+                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
 
-                if(!rental.Equals(default(VehicleRentalManager.Rental)))
+                if (!rental.Equals(default(VehicleRentalManager.Rental)))
                 {
                     Debug.Log("SetRentalParkingVehicle");
                     rental.RentedVehicleID = parkedVehicle;
                     VehicleRentalManager.SetVehicleRental(__state, rental);
+                }
+
+                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                {
+                    VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity);
+                    VehicleFuelManager.RemoveVehicleFuel(vehicleID);
                 }
             }
         }
@@ -217,7 +224,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             data.m_flags |= Vehicle.Flags.Stopped;
             var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
             var neededFuel = vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity;
-            gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
+            bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+            if(!isElectric)
+            {
+                gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
+            }
             VehicleFuelManager.SetVehicleFuel(vehicleID, neededFuel);
         }
     }
