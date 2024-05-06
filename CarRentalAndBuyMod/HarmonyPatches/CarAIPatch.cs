@@ -3,8 +3,6 @@ using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
 using CarRentalAndBuyMod.Managers;
-using CarRentalAndBuyMod.AI;
-using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
@@ -70,74 +68,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     offer.Active = true;
                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
                 }
-
-                uint currentFrameIndex = Singleton<SimulationManager>.instance.m_currentFrameIndex;
-                var x = currentFrameIndex / 16;
-
-
             }
-        }
-
-        [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
-        [HarmonyPrefix]
-        public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
-        {
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-            var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-            if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
-            {
-                FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                __instance.SetTarget(vehicleID, ref data, 0);
-                __result = true;
-                return false;
-            }
-            return true;
-        }
-
-        [HarmonyPatch(typeof(CargoTruckAI), "ArriveAtTarget")]
-        [HarmonyPrefix]
-        public static bool CargoTruckAIPrefix(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
-        {
-            if (data.m_transferType >= 200)
-            {
-                var transferType = (byte)(data.m_transferType - 200);
-                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
-                {
-                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
-                    {
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        __instance.SetTarget(vehicleID, ref data, 0);
-                        __result = true;
-                        return false;
-                    }
-                }
-                else if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.PetroleumProducts)
-                {
-                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
-                    {
-                        int transferSize = (int)data.m_transferSize;
-                        gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.PetroleumProducts, ref transferSize);
-                        __instance.SetTarget(vehicleID, ref data, 0);
-                        __result = true;
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building)
-        {
-            data.m_flags |= Vehicle.Flags.Stopped;
-            var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-            var neededFuel = vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity;
-            gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
-            VehicleFuelManager.SetVehicleFuel(vehicleID, neededFuel);
-            
         }
     }
 }

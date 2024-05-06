@@ -1,7 +1,9 @@
 ﻿using CarRentalAndBuyMod.AI;
-using CarRentalAndBuyMod.Utils;
+using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using HarmonyLib;
+using MoreTransferReasons;
+using MoreTransferReasons.AI;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -9,13 +11,13 @@ using UnityEngine;
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
     [HarmonyPatch]
-    public static class PassengerCarAIPatch
+    public static class ExtendedPassengerCarAIPatch
     {
         public static ushort Chosen_Building = 0;
 
-        [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "CanLeave")]
         [HarmonyPrefix]
-        public static bool CanLeave(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref bool __result)
+        public static bool CanLeave(ExtendedPassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref bool __result)
         {
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding];
 
@@ -61,7 +63,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         // get the tourist that parking his car
         [HarmonyBefore(["me.tmpe"])]
-        [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "ParkVehicle")]
         [HarmonyPrefix]
         public static void ParkVehiclePrefix(ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, ref uint __state)
         {
@@ -98,7 +100,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         }
 
         // set the parked car as the toursit rental vehicle
-        [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "ParkVehicle")]
         [HarmonyPostfix]
         public static void ParkVehiclePostfix(ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, uint __state)
         {
@@ -119,7 +121,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         }
 
 
-        [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "GetColor", [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
         public static bool GetColor(ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
@@ -157,7 +159,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-        [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(VehicleParked), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "GetColor", [typeof(ushort), typeof(VehicleParked), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
         public static bool GetColor(ushort parkedVehicleID, ref VehicleParked data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
@@ -193,6 +195,31 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
             return true;
+        }
+
+        [HarmonyPatch(typeof(ExtendedPassengerCarAI), "ArriveAtTarget")]
+        [HarmonyPrefix]
+        public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        {
+            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+            var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
+            if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
+            {
+                FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
+                __instance.SetTarget(vehicleID, ref data, 0);
+                __result = true;
+                return false;
+            }
+            return true;
+        }
+
+        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building)
+        {
+            data.m_flags |= Vehicle.Flags.Stopped;
+            var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+            var neededFuel = vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity;
+            gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
+            VehicleFuelManager.SetVehicleFuel(vehicleID, neededFuel);
         }
     }
 }
