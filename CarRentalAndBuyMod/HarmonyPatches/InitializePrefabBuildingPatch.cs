@@ -20,6 +20,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Object.DestroyImmediate(oldAI);
                     var newAI = (PrefabAI)__instance.gameObject.AddComponent<GasStationAI>();
                     PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+
+                    __instance.m_placementStyle = ItemClass.Placement.Manual;
                 }
             }
             catch (Exception e)
