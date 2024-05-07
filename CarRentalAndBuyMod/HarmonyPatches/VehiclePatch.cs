@@ -3,7 +3,6 @@ using ColossalFramework;
 using HarmonyLib;
 using MoreTransferReasons.AI;
 using System.Linq;
-using static RenderManager;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {

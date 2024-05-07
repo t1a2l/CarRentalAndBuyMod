@@ -23,11 +23,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                     if(isElectric)
                     {
-                        Type.text += "          Battery Percent: " + value.ToString("#0%");
+                        Type.text += "          Battery Percent:  " + value.ToString("#0%");
                     }
                     else
                     {
-                        Type.text += "          Fuel Percent: " + value.ToString("#0%");
+                        Type.text += "          Fuel Percent:  " + value.ToString("#0%");
                     }
                 }
             }
@@ -41,11 +41,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                     if (isElectric)
                     {
-                        Type.text += "          Battery Percent: " + value.ToString("#0%");
+                        Type.text += "          Battery Percent:  " + value.ToString("#0%");
                     }
                     else
                     {
-                        Type.text += "          Fuel Percent: " + value.ToString("#0%");
+                        Type.text += "          Fuel Percent:  " + value.ToString("#0%");
                     }
                 }
             }
@@ -63,7 +63,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
                     double value = (double)vehicleFuel.CurrentFuelCapacity / (double)vehicleFuel.MaxFuelCapacity;
-                    Type.text += "          Fuel Percent:" + value.ToString("#0%");
+                    Type.text += "          Fuel Percent:  " + value.ToString("#0%");
                 }    
             }
         }
