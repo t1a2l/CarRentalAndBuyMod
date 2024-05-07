@@ -15,13 +15,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             if(__instance is ExtendedPassengerCarAI)
             {
-                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60);
+                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30000, 60000);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60000);
             }
             if (__instance is ExtendedCargoTruckAI)
             {
-                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80);
+                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50000, 80000);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80000);
             }
         }
 
@@ -54,6 +54,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     offer.Active = true;
                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
                 }
+                VehicleFuelManager.SetVehicleFuel(vehicleID, -1);
             }
         }
     }

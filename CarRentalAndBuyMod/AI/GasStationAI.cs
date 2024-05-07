@@ -32,7 +32,7 @@ namespace CarRentalAndBuyMod.AI
         public int m_visitPlaceCount = 10;
 
         [CustomizableProperty("Fuel Capacity")]
-        public ushort m_fuelCapacity = 50000;
+        public int m_fuelCapacity = 50000000;
 
         ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
