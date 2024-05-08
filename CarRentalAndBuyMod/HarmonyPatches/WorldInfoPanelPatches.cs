@@ -37,7 +37,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.ParkedVehicle);
                 if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    double value = (double)vehicleFuel.CurrentFuelCapacity / (double)vehicleFuel.MaxFuelCapacity;
+                    float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                     bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                     if (isElectric)
                     {
@@ -62,7 +62,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.Vehicle);
                 if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    double value = (double)vehicleFuel.CurrentFuelCapacity / (double)vehicleFuel.MaxFuelCapacity;
+                    float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                     Type.text += "          Fuel Percent:  " + value.ToString("#0%");
                 }    
             }

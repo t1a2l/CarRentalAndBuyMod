@@ -42,9 +42,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             data.m_flags |= Vehicle.Flags.Stopped;
             var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-            var neededFuel = vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity;
+            var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
             gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
-            VehicleFuelManager.SetVehicleFuel(vehicleID, neededFuel);
+            VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
         }
     }
 }

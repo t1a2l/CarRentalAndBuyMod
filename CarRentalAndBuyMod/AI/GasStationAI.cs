@@ -8,7 +8,7 @@ using System;
 
 namespace CarRentalAndBuyMod.AI
 {
-    public class GasStationAI : PlayerBuildingAI
+    public class GasStationAI : PlayerBuildingAI, IExtendedBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
         public int m_workPlaceCount0 = 5;
@@ -258,7 +258,7 @@ namespace CarRentalAndBuyMod.AI
                         offer.Position = buildingData.m_position;
                         offer.Amount = missingFuel;
                         offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(m_incomingResource, offer);
+                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
                     }
 
                     if (actualFuelCapacity > m_fuelCapacity * 0.1)

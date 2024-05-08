@@ -26,8 +26,8 @@ namespace CarRentalAndBuyMod.Serializer
 
                 // Write actual settings
                 StorageData.WriteUInt16(kvp.Key, Data);
-                StorageData.WriteInt32(kvp.Value.CurrentFuelCapacity, Data);
-                StorageData.WriteInt32(kvp.Value.MaxFuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -43,8 +43,8 @@ namespace CarRentalAndBuyMod.Serializer
 
                 // Write actual settings
                 StorageData.WriteUInt16(kvp.Key, Data);
-                StorageData.WriteInt32(kvp.Value.CurrentFuelCapacity, Data);
-                StorageData.WriteInt32(kvp.Value.MaxFuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -69,9 +69,9 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort vehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    int currentFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+                    float currentFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                    int maxFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+                    float maxFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
                     var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
                     {
@@ -95,9 +95,9 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    int currentFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+                    float currentFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                    int maxFuelCapacity = StorageData.ReadInt32(Data, ref iIndex);
+                    float maxFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
                     var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
                     {

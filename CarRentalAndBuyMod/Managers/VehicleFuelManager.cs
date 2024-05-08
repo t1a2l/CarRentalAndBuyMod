@@ -10,8 +10,8 @@ namespace CarRentalAndBuyMod.Managers
 
         public struct VehicleFuelCapacity
         {
-            public int CurrentFuelCapacity;
-            public int MaxFuelCapacity;
+            public float CurrentFuelCapacity;
+            public float MaxFuelCapacity;
         }
 
         public static void Init()
@@ -25,7 +25,7 @@ namespace CarRentalAndBuyMod.Managers
 
         public static VehicleFuelCapacity GetParkedVehicleFuel(ushort vehicleId) => !ParkedVehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
 
-        public static void CreateVehicleFuel(ushort vehicleId, int currentFuelCapacity, int maxFuelCapacity)
+        public static void CreateVehicleFuel(ushort vehicleId, float currentFuelCapacity, float maxFuelCapacity)
         {
             if (!VehiclesFuel.TryGetValue(vehicleId, out _))
             {
@@ -38,7 +38,7 @@ namespace CarRentalAndBuyMod.Managers
             }
         }
 
-        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, int currentFuelCapacity, int maxFuelCapacity)
+        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, float currentFuelCapacity, float maxFuelCapacity)
         {
             if (!ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
             {
@@ -51,14 +51,14 @@ namespace CarRentalAndBuyMod.Managers
             }
         }
 
-        public static void SetVehicleFuel(ushort vehicleId, int added_fuel)
+        public static void SetVehicleFuel(ushort vehicleId, float added_fuel)
         {
             var vehicleFuelCapacity = VehiclesFuel[vehicleId];
             vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
             VehiclesFuel[vehicleId] = vehicleFuelCapacity;
         }
 
-        public static void SetParkedVehicleFuel(ushort parkedVehicleId, int added_fuel)
+        public static void SetParkedVehicleFuel(ushort parkedVehicleId, float added_fuel)
         {
             var vehicleFuelCapacity = ParkedVehiclesFuel[parkedVehicleId];
             vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
