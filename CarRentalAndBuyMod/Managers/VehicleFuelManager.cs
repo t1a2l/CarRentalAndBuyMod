@@ -13,6 +13,7 @@ namespace CarRentalAndBuyMod.Managers
             public float CurrentFuelCapacity;
             public float MaxFuelCapacity;
             public byte OriginalTransferReason;
+            public ushort OriginalTargetBuilding;
         }
 
         public static void Init()
@@ -31,7 +32,7 @@ namespace CarRentalAndBuyMod.Managers
 
         public static VehicleFuelCapacity GetParkedVehicleFuel(ushort vehicleId) => !ParkedVehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
 
-        public static void CreateVehicleFuel(ushort vehicleId, float currentFuelCapacity, float maxFuelCapacity, byte originalTransferReason)
+        public static void CreateVehicleFuel(ushort vehicleId, float currentFuelCapacity, float maxFuelCapacity, byte originalTransferReason, ushort originalTargetBuilding)
         {
             if (!VehiclesFuel.TryGetValue(vehicleId, out _))
             {
@@ -39,13 +40,14 @@ namespace CarRentalAndBuyMod.Managers
                 {
                     CurrentFuelCapacity = currentFuelCapacity,
                     MaxFuelCapacity = maxFuelCapacity,
-                    OriginalTransferReason = originalTransferReason
+                    OriginalTransferReason = originalTransferReason,
+                    OriginalTargetBuilding = originalTargetBuilding
                 };
                 VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
             }
         }
 
-        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, float currentFuelCapacity, float maxFuelCapacity, byte originalTransferReason)
+        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, float currentFuelCapacity, float maxFuelCapacity, byte originalTransferReason, ushort originalTargetBuilding)
         {
             if (!ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
             {
@@ -53,7 +55,8 @@ namespace CarRentalAndBuyMod.Managers
                 {
                     CurrentFuelCapacity = currentFuelCapacity,
                     MaxFuelCapacity = maxFuelCapacity,
-                    OriginalTransferReason = originalTransferReason
+                    OriginalTransferReason = originalTransferReason,
+                    OriginalTargetBuilding = originalTargetBuilding
                 };
                 ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
             }

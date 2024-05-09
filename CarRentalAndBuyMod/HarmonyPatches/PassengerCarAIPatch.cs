@@ -120,7 +120,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity, vehicleData.m_transferType);
+                    VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity, vehicleData.m_transferType, vehicleData.m_targetBuilding);
                     VehicleFuelManager.RemoveVehicleFuel(vehicleID);
                 }
             }

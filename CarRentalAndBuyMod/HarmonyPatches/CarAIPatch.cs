@@ -16,12 +16,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             if(__instance is ExtendedPassengerCarAI)
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, data.m_transferType);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, data.m_transferType, data.m_targetBuilding);
             }
             if (__instance is ExtendedCargoTruckAI)
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_transferType);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_transferType, data.m_targetBuilding);
             }
         }
 

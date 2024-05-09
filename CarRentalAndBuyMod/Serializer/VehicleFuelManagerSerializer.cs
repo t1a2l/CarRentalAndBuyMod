@@ -29,6 +29,7 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
                 StorageData.WriteByte(kvp.Value.OriginalTransferReason, Data);
+                StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -47,6 +48,7 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
                 StorageData.WriteByte(kvp.Value.OriginalTransferReason, Data);
+                StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -77,11 +79,14 @@ namespace CarRentalAndBuyMod.Serializer
 
                     byte originalTransferReason = StorageData.ReadByte(Data, ref iIndex);
 
+                    ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
+
                     var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
                     {
                         CurrentFuelCapacity = currentFuelCapacity,
                         MaxFuelCapacity = maxFuelCapacity,
-                        OriginalTransferReason = originalTransferReason
+                        OriginalTransferReason = originalTransferReason,
+                        OriginalTargetBuilding = originalTargetBuilding
                     };
 
                     VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
@@ -106,11 +111,14 @@ namespace CarRentalAndBuyMod.Serializer
 
                     byte originalTransferReason = StorageData.ReadByte(Data, ref iIndex);
 
+                    ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
+
                     var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
                     {
                         CurrentFuelCapacity = currentFuelCapacity,
                         MaxFuelCapacity = maxFuelCapacity,
-                        OriginalTransferReason = originalTransferReason
+                        OriginalTransferReason = originalTransferReason,
+                        OriginalTargetBuilding = originalTargetBuilding
                     };
 
                     VehicleFuelManager.ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
