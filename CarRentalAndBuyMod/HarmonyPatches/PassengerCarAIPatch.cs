@@ -238,6 +238,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
             data.m_transferType = vehicleFuel.OriginalTransferReason;
+            data.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
         }
     }
 }
