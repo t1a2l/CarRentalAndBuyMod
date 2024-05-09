@@ -29,7 +29,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        __instance.SetTarget(vehicleID, ref data, 0);
+                        var newTargetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                        if(newTargetBuilding.Info.GetAI() is GasStationAI)
+                        {
+                            data.m_targetBuilding = 0;
+                        }
+                        __instance.SetTarget(vehicleID, ref data, data.m_targetBuilding);
+                        data.m_flags |= Vehicle.Flags.Stopped;
                         __result = true;
                         return false;
                     }
@@ -47,6 +53,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
             data.m_transferType = vehicleFuel.OriginalTransferReason;
             data.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
+            data.m_flags &= ~Vehicle.Flags.Stopped;
         }
     }
 }
