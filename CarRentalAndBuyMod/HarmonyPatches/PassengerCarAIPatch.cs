@@ -120,7 +120,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity);
+                    VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity, vehicleData.m_transferType);
                     VehicleFuelManager.RemoveVehicleFuel(vehicleID);
                 }
             }
@@ -207,14 +207,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-            var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-            if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
+            if (data.m_transferType >= 200)
             {
-                FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                __instance.SetTarget(vehicleID, ref data, 0);
-                __result = true;
-                return false;
+                byte transferType = (byte)(data.m_transferType - 200);
+                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                {
+                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                    var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
+                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
+                    {
+                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
+                        __instance.SetTarget(vehicleID, ref data, 0);
+                        __result = true;
+                        return false;
+                    }
+                }
             }
             return true;
         }
@@ -230,6 +237,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
             VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+            data.m_transferType = vehicleFuel.OriginalTransferReason;
         }
     }
 }

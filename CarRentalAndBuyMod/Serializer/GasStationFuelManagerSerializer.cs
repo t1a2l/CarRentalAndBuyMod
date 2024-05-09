@@ -52,7 +52,7 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort fuelCapacity = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    GasStationFuelManager.GasStationsFuel.Add(buildingId, fuelCapacity);
+                     GasStationFuelManager.GasStationsFuel.Add(buildingId, fuelCapacity);
 
                     CheckEndTuple($"Buffer({i})", iGasStationManagerVersion, Data, ref iIndex);
                 }

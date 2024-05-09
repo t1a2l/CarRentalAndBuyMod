@@ -45,6 +45,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
             gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+            data.m_transferType = vehicleFuel.OriginalTransferReason;
         }
     }
 }

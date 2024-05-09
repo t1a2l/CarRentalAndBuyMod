@@ -55,6 +55,11 @@ namespace CarRentalAndBuyMod.Serializer
                                 VehicleRentalManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
                                 CheckEndTuple("VehicleRentalManagerSerializer", SaveGameFileVersion, Data, ref Index);
 
+                                if (Index == Data.Length)
+                                {
+                                    break;
+                                }
+
                                 CheckStartTuple("GasStationFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 GasStationFuelManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
                                 CheckEndTuple("GasStationFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
