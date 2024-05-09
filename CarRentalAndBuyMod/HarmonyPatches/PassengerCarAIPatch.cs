@@ -161,7 +161,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 return false;
             }
-
             return true;
         }
 
@@ -199,8 +198,23 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 return false;
             }
-
             return true;
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "GetLocalizedStatus", [typeof(ushort), typeof(Vehicle), typeof(InstanceID)],
+            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref])]
+        [HarmonyPostfix]
+        public static void GetLocalizedStatus(ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
+        {
+            if(data.m_transferType >= 200)
+            {
+                byte transferType = (byte)(data.m_transferType - 200);
+                if((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                {
+                    target = InstanceID.Empty;
+                    __result = "Getting fuel";
+                }
+            }
         }
 
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
