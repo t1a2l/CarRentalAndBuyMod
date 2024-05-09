@@ -35,7 +35,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                             data.m_targetBuilding = 0;
                         }
                         __instance.SetTarget(vehicleID, ref data, data.m_targetBuilding);
-                        data.m_flags |= Vehicle.Flags.Stopped;
                         __result = true;
                         return false;
                     }
