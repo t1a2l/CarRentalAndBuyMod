@@ -86,6 +86,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     vehicleFuel.OriginalTargetBuilding = data.m_targetBuilding;
                     VehicleFuelManager.VehiclesFuel[vehicleID] = vehicleFuel;
                 }
+                if(data.Info.GetAI() is CarTrailerAI)
+                {
+                    VehicleFuelManager.RemoveVehicleFuel(vehicleID);
+                }
             }
         }
 

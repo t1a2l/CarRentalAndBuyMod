@@ -5,6 +5,7 @@ using HarmonyLib;
 using MoreTransferReasons;
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -12,6 +13,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
+        private delegate bool RemoveTargetPassengerCarAIDelegate(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data);
+        private static readonly RemoveTargetPassengerCarAIDelegate RemoveTarget = AccessTools.MethodDelegate<RemoveTargetPassengerCarAIDelegate>(typeof(PassengerCarAI).GetMethod("RemoveTarget", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate bool StartPathFindPassengerCarAIDelegate(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data);
+        private static readonly StartPathFindPassengerCarAIDelegate StartPathFind = AccessTools.MethodDelegate<StartPathFindPassengerCarAIDelegate>(typeof(PassengerCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], null), null, false);
+
         public static ushort Chosen_Building = 0;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
@@ -64,7 +71,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyBefore(["me.tmpe"])]
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPrefix]
-        public static void ParkVehiclePrefix(ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, ref uint __state)
+        public static void ParkVehiclePrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, ref uint __state)
         {
             CitizenManager instance2 = Singleton<CitizenManager>.instance;
             uint num = 0u;
@@ -101,7 +108,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         // set the parked car as the toursit rental vehicle
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPostfix]
-        public static void ParkVehiclePostfix(ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, uint __state)
+        public static void ParkVehiclePostfix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, uint __state)
         {
             if(__state != 0)
             {
@@ -130,7 +137,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
-        public static bool GetColor(ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        public static bool GetColor(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
         {
             if (vehicleID == 0)
             {
@@ -167,7 +174,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(VehicleParked), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
-        public static bool GetColor(ushort parkedVehicleID, ref VehicleParked data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
+        public static bool GetColor(PassengerCarAI __instance, ushort parkedVehicleID, ref VehicleParked data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode, ref Color __result)
         {
             if (parkedVehicleID == 0)
             {
@@ -204,7 +211,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPatch(typeof(PassengerCarAI), "GetLocalizedStatus", [typeof(ushort), typeof(Vehicle), typeof(InstanceID)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref])]
         [HarmonyPostfix]
-        public static void GetLocalizedStatus(ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
+        public static void GetLocalizedStatus(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
             if(data.m_transferType >= 200)
             {
@@ -215,6 +222,43 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     __result = "Getting fuel";
                 }
             }
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "RemoveTarget")]
+        [HarmonyPrefix]
+        public static bool RemoveTargetPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data)
+        {
+            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+            if(building.Info.GetAI() is GasStationAI)
+            {
+                data.m_targetBuilding = 0;
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static bool SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        {
+            if (targetBuilding != 0)
+            {
+                if (data.m_transferType >= 200 && data.m_transferType != 255)
+                {
+                    byte transferType = (byte)(data.m_transferType - 200);
+                    if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                    {
+                        RemoveTarget(__instance, vehicleID, ref data);
+                        data.m_targetBuilding = targetBuilding;
+                        if (!StartPathFind(__instance, vehicleID, ref data))
+                        {
+                            data.Unspawn(vehicleID);
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
