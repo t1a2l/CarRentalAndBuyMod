@@ -1,7 +1,6 @@
 ﻿using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons.AI;
 using System.Linq;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -20,62 +19,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
             }
-        }
 
-        [HarmonyPatch(typeof(VehicleManager), "ReleaseParkedVehicle")]
-        [HarmonyPrefix]
-        public static void ReleaseParkedVehicle(ushort parked)
-        {
-            var rentalObject = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == parked).FirstOrDefault();
-
-            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)) && !rentalObject.Value.IsRemovedToSpawn)
+            if (VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleID, out _))
             {
-                VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
+                VehicleFuelManager.RemoveVehicleFuel(vehicleID);
             }
         }
-
-        [HarmonyPatch(typeof(VehicleAI), "CalculateTargetSpeed",
-            [typeof(ushort), typeof(Vehicle), typeof(float), typeof(float)],
-            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
-        [HarmonyPostfix]
-        public static void CalculateTargetSpeed(VehicleAI __instance, ushort vehicleID, ref Vehicle data, float speedLimit, float curve, ref float __result)
-        {
-            if (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI)
-            {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                if (vehicleFuel.CurrentFuelCapacity < 10)
-                {
-                    __result = 0.5f;
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(VehicleAI), "LoadVehicle")]
-        [HarmonyPostfix]
-        public static void LoadVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
-        {
-            var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-            if(vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
-            {
-                if (__instance is ExtendedPassengerCarAI)
-                {
-                    int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
-                    VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, data.m_transferType, data.m_targetBuilding);
-                }
-                if (__instance is ExtendedCargoTruckAI)
-                {
-                    int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                    VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_transferType, data.m_targetBuilding);
-                }
-            }
-            else
-            {
-                if(data.Info.GetAI() is CarTrailerAI)
-                {
-                    VehicleFuelManager.RemoveVehicleFuel(vehicleID);
-                }
-            }
-        }
-
     }
 }

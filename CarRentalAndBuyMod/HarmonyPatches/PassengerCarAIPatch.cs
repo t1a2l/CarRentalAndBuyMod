@@ -234,6 +234,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
                         var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                        if (vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                        {
+                            __instance.SetTarget(vehicleID, ref data, 0);
+                            __result = true;
+                            return false;
+                        }
                         var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                         VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
