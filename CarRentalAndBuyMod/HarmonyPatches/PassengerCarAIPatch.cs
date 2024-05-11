@@ -5,7 +5,6 @@ using HarmonyLib;
 using MoreTransferReasons;
 using System;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -13,20 +12,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
-        private delegate bool RemoveTargetPassengerCarAIDelegate(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data);
-        private static readonly RemoveTargetPassengerCarAIDelegate RemoveTarget = AccessTools.MethodDelegate<RemoveTargetPassengerCarAIDelegate>(typeof(PassengerCarAI).GetMethod("RemoveTarget", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
-
-        private delegate bool StartPathFindPassengerCarAIDelegate(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data);
-        private static readonly StartPathFindPassengerCarAIDelegate StartPathFind = AccessTools.MethodDelegate<StartPathFindPassengerCarAIDelegate>(typeof(PassengerCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], null), null, false);
-
         public static ushort Chosen_Building = 0;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
         [HarmonyPrefix]
         public static bool CanLeave(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref bool __result)
         {
+            if(vehicleData.m_sourceBuilding == 0)
+            {
+                return true;
+            }
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding];
-
             if (sourceBuilding.Info.GetAI() is CarRentalAI)
             {
                 CitizenManager instance = Singleton<CitizenManager>.instance;
@@ -238,11 +234,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        var newTargetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                        if (newTargetBuilding.Info.GetAI() is GasStationAI)
-                        {
-                            data.m_targetBuilding = 0;
-                        }
                         __instance.SetTarget(vehicleID, ref data, data.m_targetBuilding);
                         __result = true;
                         return false;

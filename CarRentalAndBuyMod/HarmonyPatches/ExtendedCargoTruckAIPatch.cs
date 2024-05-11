@@ -5,27 +5,25 @@ using HarmonyLib;
 using MoreTransferReasons.AI;
 using MoreTransferReasons;
 using UnityEngine;
-using System.Reflection;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
     [HarmonyPatch]
     public static class ExtendedCargoTruckAIPatch
     {
-        private delegate bool StartPathFindCargoTruckAIDelegate(CargoTruckAI __instance, ushort vehicleID, ref Vehicle data);
-        private static readonly StartPathFindCargoTruckAIDelegate StartPathFind = AccessTools.MethodDelegate<StartPathFindCargoTruckAIDelegate>(typeof(CargoTruckAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], null), null, false);
-
-        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "RemoveTarget")]
-        [HarmonyPrefix]
-        public static bool RemoveTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data)
+        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "GetLocalizedStatus")]
+        [HarmonyPostfix]
+        public static void GetLocalizedStatus(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-            if (building.Info.GetAI() is GasStationAI)
+            if (data.m_transferType >= 200)
             {
-                data.m_targetBuilding = 0;
-                return false;
+                byte transferType = (byte)(data.m_transferType - 200);
+                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                {
+                    target = InstanceID.Empty;
+                    __result = "Getting fuel";
+                }
             }
-            return true;
         }
 
         [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtTarget")]
@@ -46,11 +44,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        var newTargetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                        if(newTargetBuilding.Info.GetAI() is GasStationAI)
-                        {
-                            data.m_targetBuilding = 0;
-                        }
                         __instance.SetTarget(vehicleID, ref data, data.m_targetBuilding);
                         __result = true;
                         return false;
