@@ -43,8 +43,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        var targetBuilding = data.m_targetBuilding;
+                        var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                        var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
+                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
+                        VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                        data.m_transferType = vehicleFuel.OriginalTransferReason;
+                        var targetBuilding = vehicleFuel.OriginalTargetBuilding;
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
                         __result = true;
                         return false;
@@ -54,15 +58,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building)
+        private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
         {
             data.m_flags |= Vehicle.Flags.Stopped;
-            var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-            var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
             gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
-            VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
-            data.m_transferType = vehicleFuel.OriginalTransferReason;
-            data.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
             data.m_flags &= ~Vehicle.Flags.Stopped;
         }
     }
