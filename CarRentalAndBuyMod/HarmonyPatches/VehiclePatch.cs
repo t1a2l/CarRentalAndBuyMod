@@ -70,22 +70,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             else
             {
-                if(vehicleFuel.MaxFuelCapacity == 60000 || vehicleFuel.MaxFuelCapacity == 80000)
-                {
-                    vehicleFuel.MaxFuelCapacity /= 1000;
-                    vehicleFuel.CurrentFuelCapacity /= 1000;
-                    VehicleFuelManager.VehiclesFuel[vehicleID] = vehicleFuel;
-                }
-                if(__instance is ExtendedCargoTruckAI && vehicleFuel.OriginalTransferReason == 0)
-                {
-                    vehicleFuel.OriginalTransferReason = data.m_transferType;
-                    VehicleFuelManager.VehiclesFuel[vehicleID] = vehicleFuel;
-                }
-                if(vehicleFuel.OriginalTargetBuilding == 0)
-                {
-                    vehicleFuel.OriginalTargetBuilding = data.m_targetBuilding;
-                    VehicleFuelManager.VehiclesFuel[vehicleID] = vehicleFuel;
-                }
                 if(data.Info.GetAI() is CarTrailerAI)
                 {
                     VehicleFuelManager.RemoveVehicleFuel(vehicleID);

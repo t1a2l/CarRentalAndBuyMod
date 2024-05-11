@@ -45,8 +45,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(16U) == 0;
-                if ((percent > 0.2 && shouldFuel) || percent <= 0.2)
+                bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(32U) == 0;
+                if ((percent > 0.2 && percent < 0.8 && shouldFuel) || percent <= 0.2)
                 {
                     ExtendedTransferManager.Offer offer = default;
                     offer.Vehicle = vehicleID;
@@ -55,7 +55,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     offer.Active = true;
                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
                 }
-                if(vehicleFuel.CurrentFuelCapacity > 0)
+                if (vehicleFuel.CurrentFuelCapacity > 0)
                 {
                     VehicleFuelManager.SetVehicleFuel(vehicleID, -0.01f);
                 }

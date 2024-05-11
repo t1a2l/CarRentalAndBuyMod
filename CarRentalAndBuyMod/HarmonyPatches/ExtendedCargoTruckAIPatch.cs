@@ -44,7 +44,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                     {
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building);
-                        __instance.SetTarget(vehicleID, ref data, data.m_targetBuilding);
+                        var targetBuilding = data.m_targetBuilding;
+                        __instance.SetTarget(vehicleID, ref data, targetBuilding);
                         __result = true;
                         return false;
                     }
