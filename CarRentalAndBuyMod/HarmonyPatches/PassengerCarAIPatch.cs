@@ -224,43 +224,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(PassengerCarAI), "RemoveTarget")]
-        [HarmonyPrefix]
-        public static bool RemoveTargetPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data)
-        {
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-            if(building.Info.GetAI() is GasStationAI)
-            {
-                data.m_targetBuilding = 0;
-                return false;
-            }
-            return true;
-        }
-
-        [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
-        [HarmonyPrefix]
-        public static bool SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
-        {
-            if (targetBuilding != 0)
-            {
-                if (data.m_transferType >= 200 && data.m_transferType != 255)
-                {
-                    byte transferType = (byte)(data.m_transferType - 200);
-                    if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
-                    {
-                        RemoveTarget(__instance, vehicleID, ref data);
-                        data.m_targetBuilding = targetBuilding;
-                        if (!StartPathFind(__instance, vehicleID, ref data))
-                        {
-                            data.Unspawn(vehicleID);
-                        }
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
         [HarmonyPrefix]
         public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)

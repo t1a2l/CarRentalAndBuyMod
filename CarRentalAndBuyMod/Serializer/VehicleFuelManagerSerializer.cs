@@ -81,15 +81,18 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                    if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleId, out _))
                     {
-                        CurrentFuelCapacity = currentFuelCapacity,
-                        MaxFuelCapacity = maxFuelCapacity,
-                        OriginalTransferReason = originalTransferReason,
-                        OriginalTargetBuilding = originalTargetBuilding
-                    };
+                        var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                        {
+                            CurrentFuelCapacity = currentFuelCapacity,
+                            MaxFuelCapacity = maxFuelCapacity,
+                            OriginalTransferReason = originalTransferReason,
+                            OriginalTargetBuilding = originalTargetBuilding
+                        };
 
-                    VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
+                        VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
+                    }
 
                     CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
                 }
@@ -113,16 +116,19 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                    if (!VehicleFuelManager.ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
                     {
-                        CurrentFuelCapacity = currentFuelCapacity,
-                        MaxFuelCapacity = maxFuelCapacity,
-                        OriginalTransferReason = originalTransferReason,
-                        OriginalTargetBuilding = originalTargetBuilding
-                    };
+                        var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                        {
+                            CurrentFuelCapacity = currentFuelCapacity,
+                            MaxFuelCapacity = maxFuelCapacity,
+                            OriginalTransferReason = originalTransferReason,
+                            OriginalTargetBuilding = originalTargetBuilding
+                        };
 
-                    VehicleFuelManager.ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
-
+                        VehicleFuelManager.ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
+                    }
+                    
                     CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
                 }
             }

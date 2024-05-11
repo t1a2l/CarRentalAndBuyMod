@@ -31,6 +31,12 @@ namespace CarRentalAndBuyMod.Utils
                     newAIFieldDic.TryGetValue(fieldInfo.Name, out FieldInfo newAIField);
                     try
                     {
+                        var isTransferManager = fieldInfo.FieldType.DeclaringType.Name == "TransferManager";
+                        var isExtendedTransferManager = newAIField.FieldType.DeclaringType.Name == "ExtendedTransferManager";
+                        if (isTransferManager && isExtendedTransferManager)
+                        {
+                            continue;
+                        }
                         if (newAIField != null && newAIField.GetType().Equals(fieldInfo.GetType()))
                         {
                             newAIField.SetValue(dst, fieldInfo.GetValue(src));
