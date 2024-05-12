@@ -57,11 +57,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 var CanAskForFuel = false;
-                if (vehicleData.m_transferType < 200)
+                if (vehicleData.m_transferType < 200 || vehicleData.m_transferType == 255)
                 {
                     CanAskForFuel = true;
                 }
-                if (vehicleData.m_transferType >= 200)
+                else if (vehicleData.m_transferType >= 200)
                 {
                     byte transferType = (byte)(vehicleData.m_transferType - 200);
                     if ((ExtendedTransferManager.TransferReason)transferType != ExtendedTransferManager.TransferReason.FuelVehicle)
@@ -117,7 +117,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        private static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
+        public static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
         {
             if (instance is ExtendedPassengerCarAI)
             {
