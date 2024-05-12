@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static CarRentalAndBuyMod.Managers.VehicleFuelManager;
 
 namespace CarRentalAndBuyMod.Managers
 {
@@ -60,6 +61,24 @@ namespace CarRentalAndBuyMod.Managers
                     OriginalTargetBuilding = originalTargetBuilding
                 };
                 ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
+            }
+        }
+
+        public static void SetVehicleFuelOriginalTransferReason(ushort vehicleId, byte originalTransferReason)
+        {
+            if (VehiclesFuel.TryGetValue(vehicleId, out var vehicleFuelCapacity))
+            {
+                vehicleFuelCapacity.OriginalTransferReason = originalTransferReason;
+                VehiclesFuel[vehicleId] = vehicleFuelCapacity;
+            }
+        }
+
+        public static void SetVehicleFuelOriginalTargetBuilding(ushort vehicleId, ushort originalTargetBuilding)
+        {
+            if (VehiclesFuel.TryGetValue(vehicleId, out var vehicleFuelCapacity))
+            {
+                vehicleFuelCapacity.OriginalTargetBuilding = originalTargetBuilding;
+                VehiclesFuel[vehicleId] = vehicleFuelCapacity;
             }
         }
 
