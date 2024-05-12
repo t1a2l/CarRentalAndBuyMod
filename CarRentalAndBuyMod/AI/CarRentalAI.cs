@@ -276,7 +276,7 @@ namespace CarRentalAndBuyMod.AI
                         offer2.Position = buildingData.m_position;
                         offer2.Amount = 1;
                         offer2.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.Cars, offer2);
+                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.Cars, offer2);
                     }
                 }
 			}

@@ -1,4 +1,5 @@
-﻿using CarRentalAndBuyMod.Managers;
+﻿using CarRentalAndBuyMod.AI;
+using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using HarmonyLib;
 using System.Linq;
@@ -17,6 +18,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
             if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)) && vehicle.Info.GetAI() is PassengerCarAI)
             {
+                var rentalBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[rentalObject.Value.CarRentalBuildingID];
+                if(rentalBuilding.Info.GetAI() is CarRentalAI carRentalAI)
+                {
+                    carRentalAI.m_rentedCarCount--;
+                }
                 VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
             }
 

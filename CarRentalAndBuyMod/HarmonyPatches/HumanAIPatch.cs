@@ -48,13 +48,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     return true;
                 }
             }
-            else if (__instance.m_info.GetAI() is ResidentAI residentAI && targetBuilding.Info.GetAI() is CarDealerAI carDealerAI)
+            else if (__instance.m_info.GetAI() is ResidentAI residentAI && targetBuilding.Info.GetAI() is CarDealerAI)
             {
                 if (targetBuilding.m_customBuffer1 > 0)
                 {
                     Debug.Log("BuyNewVehicle");
                     ResidentAIPatch.SpawnOwnVehicle(residentAI, instanceID, ref citizenData, default);
-                    carDealerAI.m_dealerCarCapacity--;
+                    targetBuilding.m_customBuffer1--;
                     return false;
                 }
                 return true;
