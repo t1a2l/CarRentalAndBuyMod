@@ -33,7 +33,7 @@ namespace CarRentalAndBuyMod.AI
 		[CustomizableProperty("Dealer Car Capacity")]
 		public int m_dealerCarCapacity = 40;
 
-		public ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.Cars;
+        public ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.Cars;
 
 		public void GetImmaterialResourceRadius(ushort buildingID, ref Building data, out ImmaterialResourceManager.Resource resource1, out float radius1)
 		{
@@ -102,7 +102,7 @@ namespace CarRentalAndBuyMod.AI
 
 		public override void GetPlacementInfoMode(out InfoManager.InfoMode mode, out InfoManager.SubInfoMode subMode, float elevation)
 		{
-			if (m_incomingResource == ExtendedTransferManager.TransferReason.Cars)
+			if (m_incomingResource == ExtendedTransferManager.TransferReason.CarBuy)
 			{
 				mode = InfoManager.InfoMode.Density;
 				subMode = InfoManager.SubInfoMode.Default;
@@ -273,7 +273,7 @@ namespace CarRentalAndBuyMod.AI
                         ExtendedTransferManager.Offer offer2 = default;
                         offer2.Building = buildingID;
                         offer2.Position = buildingData.m_position;
-                        offer2.Amount = 1;
+                        offer2.Amount = m_dealerCarCapacity;
                         offer2.Active = false;
                         Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.Cars, offer2);
                     }
