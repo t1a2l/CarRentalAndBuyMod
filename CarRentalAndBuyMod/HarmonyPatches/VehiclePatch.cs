@@ -25,5 +25,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 VehicleFuelManager.RemoveVehicleFuel(vehicleID);
             }
         }
+
+        [HarmonyPatch(typeof(Vehicle), "Spawn")]
+        [HarmonyPostfix]
+        public static void Spawn(ushort vehicleID)
+        {
+            if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleID, out _))
+            {
+                var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleID];
+                VehicleAI vehicleAI = (VehicleAI)vehicle.Info.GetAI();
+                VehicleAIPatch.CreateFuelForVehicle(vehicleAI, vehicleID, ref vehicle);
+            }
+        }
     }
 }
