@@ -5,6 +5,7 @@ using HarmonyLib;
 using MoreTransferReasons;
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -12,6 +13,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
+        private delegate bool StartPathFindCargoTruckAIDelegate(CargoTruckAI __instance, ushort vehicleID, ref Vehicle vehicleData);
+        private static readonly StartPathFindCargoTruckAIDelegate StartPathFindCargoTruckAI = AccessTools.MethodDelegate<StartPathFindCargoTruckAIDelegate>(typeof(CargoTruckAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], []), null, false);
+
         public static ushort Chosen_Building = 0;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
@@ -80,11 +84,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     uint citizen = instance2.m_units.m_buffer[num2].GetCitizen(i);
                     if (citizen != 0)
                     {
-                        var rental = VehicleRentalManager.GetVehicleRental(citizen);
                         ushort instance5 = instance2.m_citizens.m_buffer[citizen].m_instance;
-                        if (instance5 != 0 && !rental.Equals(default(VehicleRentalManager.Rental)))
+                        if (instance5 != 0)
                         {
-                            Debug.Log("GetRentalParkingVehicle");
                             __state = instance2.m_instances.m_buffer[instance5].m_citizen;
                             break;
                         }
@@ -220,25 +222,30 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
         [HarmonyPrefix]
-        public static void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public static bool SetTarget(ref CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
             if (data.m_transferType >= 200)
             {
                 byte transferType = (byte)(data.m_transferType - 200);
                 if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
                 {
-                    ushort driverInstance = GetDriverInstance(vehicleID, ref data);
-                    if (driverInstance != 0)
+                    if (!StartPathFindCargoTruckAI(__instance, vehicleID, ref data))
                     {
-                        Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding = targetBuilding;
+                        var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                        data.m_transferType = vehicleFuel.OriginalTransferReason;
+                        data.m_targetBuilding = 0;
+                        __instance.SetTarget(vehicleID, ref data, 0);
+                        data.Unspawn(vehicleID);
                     }
+                    return false;
                 }
             }
+            return true;
         }
 
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
         [HarmonyPrefix]
-        public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        public static bool ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (data.m_transferType >= 200)
             {
@@ -253,12 +260,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
                         VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
                         FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
-                        data.m_transferType = vehicleFuel.OriginalTransferReason;
+                        data.m_transferType = 0;
                         var targetBuilding = vehicleFuel.OriginalTargetBuilding;
-                        ushort driverInstance = GetDriverInstance(vehicleID, ref data);
-                        Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding = targetBuilding;
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
-                        __result = false;
+                        __result = true;
                         return false;
                     }
                 }
@@ -275,36 +280,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
             data.m_flags &= ~Vehicle.Flags.Stopped;
-        }
-
-        private static ushort GetDriverInstance(ushort vehicleID, ref Vehicle data)
-        {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = data.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
-            {
-                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
-                for (int i = 0; i < 5; i++)
-                {
-                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
-                    if (citizen != 0)
-                    {
-                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
-                        if (instance2 != 0)
-                        {
-                            return instance2;
-                        }
-                    }
-                }
-                num = nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
-            }
-            return 0;
         }
     }
 }

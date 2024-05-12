@@ -14,7 +14,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static void CitizenVehicleUpdateBindings(CitizenVehicleWorldInfoPanel __instance, ref InstanceID ___m_InstanceID)
         {
             var Type = __instance.Find<UILabel>("Type");
-            
+            var panel = __instance.Find<UIPanel>("(Library) CitizenVehicleWorldInfoPanel");
+            if(panel != null)
+            {
+                panel.height = 290;
+            }
             if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && Type != null)
             {
                 var info = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
@@ -38,10 +42,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             else if (___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && Type != null)
             {
                 var info = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.ParkedVehicle);
-                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(___m_InstanceID.ParkedVehicle);
+                if (!parkedVehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
+                    float value = parkedVehicleFuel.CurrentFuelCapacity / parkedVehicleFuel.MaxFuelCapacity;
                     bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                     Type.text += Environment.NewLine;
                     Type.parent.height = 35;
@@ -72,7 +76,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Type.text += Environment.NewLine;
                     float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                     Type.text += "Fuel Percent:  " + value.ToString("#0%");
-                }    
+                }
+                var panel = __instance.Find<UIPanel>("(Library) CityServiceVehicleWorldInfoPanel");
+                if (panel != null)
+                {
+                    panel.height = 190;
+                }
             }
         }
     }

@@ -3,27 +3,12 @@ using ColossalFramework;
 using HarmonyLib;
 using MoreTransferReasons;
 using MoreTransferReasons.AI;
-using System;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
     [HarmonyPatch]
     public static class VehicleAIPatch
     {
-        [HarmonyPatch(typeof(VehicleAI), "CreateVehicle")]
-        [HarmonyPostfix]
-        public static void CreateVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
-        {
-            CreateFuelForVehicle(__instance, vehicleID, ref data);
-        }
-
-        [HarmonyPatch(typeof(VehicleAI), "LoadVehicle")]
-        [HarmonyPostfix]
-        public static void LoadVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
-        {
-            CreateFuelForVehicle(__instance, vehicleID, ref data);
-        }
-
         [HarmonyPatch(typeof(VehicleAI), "ReleaseVehicle")]
         [HarmonyPostfix]
         public static void ReleaseVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
@@ -74,50 +59,5 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        private static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
-        {
-            if (instance is ExtendedPassengerCarAI)
-            {
-                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
-                ushort driverInstance = GetDriverInstance(vehicleID, ref data);
-                ushort driverTargetBuilding = Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding;
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, data.m_transferType, driverTargetBuilding);
-            }
-            if (instance is ExtendedCargoTruckAI)
-            {
-                int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_transferType, data.m_targetBuilding);
-            }
-        }
-
-        private static ushort GetDriverInstance(ushort vehicleID, ref Vehicle data)
-        {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = data.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
-            {
-                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
-                for (int i = 0; i < 5; i++)
-                {
-                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
-                    if (citizen != 0)
-                    {
-                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
-                        if (instance2 != 0)
-                        {
-                            return instance2;
-                        }
-                    }
-                }
-                num = nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
-            }
-            return 0;
-        }
     }
 }
