@@ -70,10 +70,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static void ParkVehiclePrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset, ref uint __state)
         {
             CitizenManager instance2 = Singleton<CitizenManager>.instance;
-            uint num = 0u;
             uint num2 = vehicleData.m_citizenUnits;
             int num3 = 0;
-            while (num2 != 0 && num == 0)
+            while (num2 != 0)
             {
                 uint nextUnit = instance2.m_units.m_buffer[num2].m_nextUnit;
                 for (int i = 0; i < 5; i++)
@@ -98,7 +97,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     break;
                 }
             }
-
         }
 
         // set the parked car as the toursit rental vehicle
@@ -220,6 +218,24 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
+        [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        {
+            if (data.m_transferType >= 200)
+            {
+                byte transferType = (byte)(data.m_transferType - 200);
+                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                {
+                    ushort driverInstance = GetDriverInstance(vehicleID, ref data);
+                    if (driverInstance != 0)
+                    {
+                        Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding = targetBuilding;
+                    }
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
         [HarmonyPrefix]
         public static bool PassengerCarAIPrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
@@ -229,24 +245,20 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 byte transferType = (byte)(data.m_transferType - 200);
                 if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
                 {
+                    var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                     var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
+                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                     {
-                        var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                        if (vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
-                        {
-                            __instance.SetTarget(vehicleID, ref data, 0);
-                            __result = true;
-                            return false;
-                        }
                         var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                         VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                         data.m_transferType = vehicleFuel.OriginalTransferReason;
                         var targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                        ushort driverInstance = GetDriverInstance(vehicleID, ref data);
+                        Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding = targetBuilding;
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
-                        __result = true;
+                        __result = false;
                         return false;
                     }
                 }
@@ -263,6 +275,36 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
             data.m_flags &= ~Vehicle.Flags.Stopped;
+        }
+
+        private static ushort GetDriverInstance(ushort vehicleID, ref Vehicle data)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = data.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+                for (int i = 0; i < 5; i++)
+                {
+                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+                    if (citizen != 0)
+                    {
+                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+                        if (instance2 != 0)
+                        {
+                            return instance2;
+                        }
+                    }
+                }
+                num = nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+            return 0;
         }
     }
 }

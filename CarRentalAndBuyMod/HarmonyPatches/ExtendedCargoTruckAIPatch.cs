@@ -39,24 +39,18 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 byte transferType = (byte)(data.m_transferType - 200);
                 if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
                 {
+                    var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                     var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
+                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                     {
-                        var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                        if(vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
-                        {
-                            __instance.SetTarget(vehicleID, ref data, 0);
-                            __result = true;
-                            return false;
-                        }
                         var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                         VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                         data.m_transferType = vehicleFuel.OriginalTransferReason;
                         var targetBuilding = vehicleFuel.OriginalTargetBuilding;
                         __instance.SetTarget(vehicleID, ref data, targetBuilding);
-                        __result = true;
+                        __result = false;
                         return false;
                     }
                 }
