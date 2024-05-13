@@ -112,7 +112,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
                 SpawnOwnVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0, 0);
+                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0);
                 VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
                 __result = true;
                 return false;

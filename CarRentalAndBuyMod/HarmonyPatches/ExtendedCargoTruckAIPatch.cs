@@ -15,14 +15,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void GetLocalizedStatus(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
-            if (data.m_transferType >= 200)
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
             {
-                byte transferType = (byte)(data.m_transferType - 200);
-                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
-                {
-                    target = InstanceID.Empty;
-                    __result = "Getting fuel";
-                }
+                target = InstanceID.Empty;
+                __result = "Getting fuel";
             }
         }
 
@@ -34,25 +30,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 return true;
             }
-            if (data.m_transferType >= 200)
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
             {
-                byte transferType = (byte)(data.m_transferType - 200);
-                if ((ExtendedTransferManager.TransferReason)transferType == ExtendedTransferManager.TransferReason.FuelVehicle)
+                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
+                if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
                 {
-                    var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
-                    var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                    if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
-                    {
-                        var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
-                        VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
-                        FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
-                        data.m_transferType = vehicleFuel.OriginalTransferReason;
-                        var targetBuilding = vehicleFuel.OriginalTargetBuilding;
-                        __instance.SetTarget(vehicleID, ref data, targetBuilding);
-                        __result = false;
-                        return false;
-                    }
+                    var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
+                    VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                    FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
+                    data.m_custom = 0;
+                    var targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                    __instance.SetTarget(vehicleID, ref data, targetBuilding);
+                    __result = false;
+                    return false;
                 }
             }
             return true;

@@ -50,26 +50,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 var CanAskForFuel = false;
-                if (vehicleData.m_transferType < 200 || vehicleData.m_transferType == 255)
+                if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
                 {
                     CanAskForFuel = true;
-                }
-                else if (vehicleData.m_transferType >= 200)
-                {
-                    byte transferType = (byte)(vehicleData.m_transferType - 200);
-                    if ((ExtendedTransferManager.TransferReason)transferType != ExtendedTransferManager.TransferReason.FuelVehicle)
-                    {
-                        CanAskForFuel = true;
-                    }
                 }
                 if(CanAskForFuel)
                 {
                     if(__instance is ExtendedCargoTruckAI)
                     {
-                        if (vehicleFuel.OriginalTransferReason == 0 && vehicleData.m_transferType != 0)
-                        {
-                            VehicleFuelManager.SetVehicleFuelOriginalTransferReason(vehicleID, vehicleData.m_transferType);
-                        }
                         if (vehicleFuel.OriginalTargetBuilding == 0 && vehicleData.m_targetBuilding != 0)
                         {
                             VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, vehicleData.m_targetBuilding);
@@ -77,10 +65,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     }
                     else if (__instance is ExtendedPassengerCarAI)
                     {
-                        if (vehicleFuel.OriginalTransferReason == 0 && vehicleData.m_transferType != 0)
-                        {
-                            VehicleFuelManager.SetVehicleFuelOriginalTransferReason(vehicleID, vehicleData.m_transferType);
-                        }
                         ushort driverInstance = GetDriverInstance(vehicleID, ref vehicleData);
                         if (driverInstance != 0)
                         {
@@ -121,12 +105,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     targetBuilding = Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_targetBuilding;
                 }
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, data.m_transferType, targetBuilding);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, targetBuilding);
             }
             if (instance is ExtendedCargoTruckAI)
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_transferType, data.m_targetBuilding);
+                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_targetBuilding);
             }
         }
 

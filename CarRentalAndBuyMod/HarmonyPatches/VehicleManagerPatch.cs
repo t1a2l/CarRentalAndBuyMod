@@ -23,7 +23,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
             if (VehicleFuelManager.VehiclesFuel.TryGetValue(vehicle, out _))
             {
-                VehicleFuelManager.RemoveParkedVehicleFuel(vehicle);
+                VehicleFuelManager.RemoveVehicleFuel(vehicle);
             }
         }
 

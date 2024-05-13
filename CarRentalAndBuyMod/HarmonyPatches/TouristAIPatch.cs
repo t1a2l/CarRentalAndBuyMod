@@ -194,7 +194,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 rental.RentedVehicleID = citizen.m_vehicle;
                 VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
                 
-                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0, 0);
+                VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0);
                 VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
                 __result = true;
                 return false;
