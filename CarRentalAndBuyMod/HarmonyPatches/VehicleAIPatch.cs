@@ -24,13 +24,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             CreateFuelForVehicle(__instance, vehicleID, ref data);
         }
 
-        [HarmonyPatch(typeof(VehicleAI), "ReleaseVehicle")]
-        [HarmonyPostfix]
-        public static void ReleaseVehicle(VehicleAI __instance, ushort vehicleID, ref Vehicle data)
-        {
-            VehicleFuelManager.RemoveVehicleFuel(vehicleID);
-        }
-
         [HarmonyPatch(typeof(VehicleAI), "CalculateTargetSpeed",
             [typeof(ushort), typeof(Vehicle), typeof(float), typeof(float)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]

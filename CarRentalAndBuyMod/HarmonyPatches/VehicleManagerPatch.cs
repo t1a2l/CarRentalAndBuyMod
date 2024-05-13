@@ -10,13 +10,30 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class VehicleManagerPatch
     {
+        [HarmonyPatch(typeof(VehicleManager), "ReleaseVehicle")]
+        [HarmonyPrefix]
+        public static void ReleaseVehicle(ushort vehicle)
+        {
+            var rentalObject = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == vehicle).FirstOrDefault();
+
+            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)))
+            {
+                VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
+            }
+
+            if (VehicleFuelManager.VehiclesFuel.TryGetValue(vehicle, out _))
+            {
+                VehicleFuelManager.RemoveParkedVehicleFuel(vehicle);
+            }
+        }
+
         [HarmonyPatch(typeof(VehicleManager), "ReleaseParkedVehicle")]
         [HarmonyPrefix]
         public static void ReleaseParkedVehicle(ushort parked)
         {
             var rentalObject = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == parked).FirstOrDefault();
 
-            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)) && !rentalObject.Value.IsRemovedToSpawn)
+            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)))
             {
                 VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
             }

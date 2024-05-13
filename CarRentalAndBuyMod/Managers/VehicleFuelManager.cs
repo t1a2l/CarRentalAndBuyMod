@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
-using static CarRentalAndBuyMod.Managers.VehicleFuelManager;
 
 namespace CarRentalAndBuyMod.Managers
 {
