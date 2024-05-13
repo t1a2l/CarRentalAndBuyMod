@@ -18,6 +18,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         private delegate VehicleInfo GetVehicleInfoDelegate(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(ResidentAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
+        [HarmonyBefore(["me.tmpe"])]
+        [HarmonyPatch(typeof(ResidentAI), "GetVehicleInfo")]
+        [HarmonyPrefix]
+        public static bool GetVehicleInfoPrefix(ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, ref VehicleInfo trailer, ref VehicleInfo __result)
+        {
+            CitizenManager instance3 = Singleton<CitizenManager>.instance;
+            ushort parked_vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
+            if(parked_vehicle != 0)
+            {
+                __result = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parked_vehicle].Info;
+                return false;
+            }
+            return true;
+        }
+
         [HarmonyPatch(typeof(ResidentAI), "SpawnVehicle")]
         [HarmonyPrefix]
         public static bool SpawnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
@@ -95,7 +110,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             if (parked_vehicle != 0)
             {
                 var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
-                SpawnOwnVehicle(__instance, instanceID, ref citizenData, pathPos);
+                SpawnOwnVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
                 VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0, 0);
                 VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
@@ -115,7 +130,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        public static void SpawnOwnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
+        public static void SpawnOwnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, VehicleInfo vehicleInfo, PathUnit.Position pathPos)
         {
             var original_sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             VehicleManager instance = Singleton<VehicleManager>.instance;
@@ -142,7 +157,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             instance2.m_lanes.m_buffer[laneID].GetClosestPosition(vector2, out var position, out var laneOffset);
             byte lastPathOffset = (byte)Mathf.Clamp(Mathf.RoundToInt(laneOffset * 255f), 0, 255);
             position = vector2 + Vector3.ClampMagnitude(position - vector2, 5f);
-            VehicleInfo vehicleInfo = GetVehicleInfo(__instance, instanceID, ref citizenData, forceProbability: false, out VehicleInfo trailer);
             if (instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false))
             {
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);

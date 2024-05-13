@@ -39,7 +39,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (carRentalAI.m_rentedCarCount < targetBuilding.m_customBuffer1)
                     {
                         Debug.Log("RentNewRentalVehicle");
-                        VehicleInfo vehicleInfo = TouristAIPatch.GetRentalVehicleInfo(ref citizenData); 
+                        VehicleInfo vehicleInfo = VehicleManagerPatch.GetVehicleInfo(ref citizenData); 
                         TouristAIPatch.SpawnRentalVehicle(touristAI, instanceID, ref citizenData, vehicleInfo, default);
                         VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_sourceBuilding);
                         carRentalAI.m_rentedCarCount++;
@@ -53,7 +53,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 if (targetBuilding.m_customBuffer1 > 0)
                 {
                     Debug.Log("BuyNewVehicle");
-                    ResidentAIPatch.SpawnOwnVehicle(residentAI, instanceID, ref citizenData, default);
+                    VehicleInfo vehicleInfo = VehicleManagerPatch.GetVehicleInfo(ref citizenData);
+                    ResidentAIPatch.SpawnOwnVehicle(residentAI, instanceID, ref citizenData, vehicleInfo, default);
                     targetBuilding.m_customBuffer1--;
                     return false;
                 }
