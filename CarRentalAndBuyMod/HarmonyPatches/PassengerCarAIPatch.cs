@@ -224,7 +224,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 if (!StartPathFindCargoTruckAI(__instance, vehicleID, ref data))
                 {
-                    data.m_targetBuilding = 0;
+                    data.m_custom = 0;
                     __instance.SetTarget(vehicleID, ref data, 0);
                     data.Unspawn(vehicleID);
                 }
