@@ -28,7 +28,6 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteUInt16(kvp.Key, Data);
                 StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
-                StorageData.WriteByte(kvp.Value.OriginalTransferReason, Data);
                 StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
                 // Write end tuple
@@ -47,7 +46,6 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteUInt16(kvp.Key, Data);
                 StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
-                StorageData.WriteByte(kvp.Value.OriginalTransferReason, Data);
                 StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
                 // Write end tuple
@@ -77,8 +75,6 @@ namespace CarRentalAndBuyMod.Serializer
 
                     float maxFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                    byte originalTransferReason = StorageData.ReadByte(Data, ref iIndex);
-
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
                     if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleId, out _))
@@ -87,7 +83,6 @@ namespace CarRentalAndBuyMod.Serializer
                         {
                             CurrentFuelCapacity = currentFuelCapacity,
                             MaxFuelCapacity = maxFuelCapacity,
-                            OriginalTransferReason = originalTransferReason,
                             OriginalTargetBuilding = originalTargetBuilding
                         };
 
@@ -112,8 +107,6 @@ namespace CarRentalAndBuyMod.Serializer
 
                     float maxFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
-                    byte originalTransferReason = StorageData.ReadByte(Data, ref iIndex);
-
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
                     if (!VehicleFuelManager.ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
@@ -122,7 +115,6 @@ namespace CarRentalAndBuyMod.Serializer
                         {
                             CurrentFuelCapacity = currentFuelCapacity,
                             MaxFuelCapacity = maxFuelCapacity,
-                            OriginalTransferReason = originalTransferReason,
                             OriginalTargetBuilding = originalTargetBuilding
                         };
 
