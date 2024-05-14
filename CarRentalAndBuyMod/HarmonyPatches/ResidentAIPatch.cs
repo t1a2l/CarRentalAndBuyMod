@@ -6,6 +6,7 @@ using MoreTransferReasons;
 using System;
 using System.Reflection;
 using UnityEngine;
+using static RenderManager;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
 {
@@ -31,6 +32,32 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return false;
             }
             return true;
+        }
+
+        [HarmonyPatch(typeof(ResidentAI), "GetLocalizedStatus", [typeof(ushort), typeof(Citizen), typeof(InstanceID)],
+            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref])]
+        [HarmonyPostfix]
+        public static void GetLocalizedStatus(ushort instanceID, ref Citizen data, ref InstanceID target, ref string __result)
+        {
+            if (data.m_instance != 0)
+            {
+                var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[data.m_instance];
+                var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
+                if (targetBuilding.Info.GetAI() is CarDealerAI)
+                {
+                    target = InstanceID.Empty;
+                    __result = "Going to buy a new car";
+                }
+            }
+            else
+            {
+                var visitBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_visitBuilding];
+                if (visitBuilding.Info.GetAI() is CarDealerAI)
+                {
+                    target = InstanceID.Empty;
+                    __result = "Buying a new car";
+                }
+            }
         }
 
         [HarmonyPatch(typeof(ResidentAI), "SpawnVehicle")]
