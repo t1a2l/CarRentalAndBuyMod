@@ -128,7 +128,7 @@ namespace CarRentalAndBuyMod.AI
 				int cargo = 0;
 				int capacity = 0;
 				int outside = 0;
-                ExtedndedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
+                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
 				text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource.ToString(), data.m_customBuffer1, cargo);
 			}
 			if (transferReason1 != ExtendedTransferManager.TransferReason.None)
