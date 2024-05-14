@@ -268,7 +268,7 @@ namespace CarRentalAndBuyMod.AI
 						offer2.Active = false;
 						Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.CarBuy, offer2);
 					}
-                    if (customBuffer < m_dealerCarCapacity)
+                    if (customBuffer < m_dealerCarCapacity * 0.3)
                     {
                         ExtendedTransferManager.Offer offer2 = default;
                         offer2.Building = buildingID;
