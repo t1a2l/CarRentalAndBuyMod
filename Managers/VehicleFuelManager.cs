@@ -27,36 +27,40 @@ namespace CarRentalAndBuyMod.Managers
             ParkedVehiclesFuel = [];
         }
 
-        public static VehicleFuelCapacity GetVehicleFuel(ushort vehicleId) => !VehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
+        public static VehicleFuelCapacity GetVehicleFuel(ushort vehicleId) => VehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? fuelCapacity : default;
 
-        public static VehicleFuelCapacity GetParkedVehicleFuel(ushort vehicleId) => !ParkedVehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? default : fuelCapacity;
+        public static VehicleFuelCapacity GetParkedVehicleFuel(ushort vehicleId) => ParkedVehiclesFuel.TryGetValue(vehicleId, out var fuelCapacity) ? fuelCapacity : default;
 
-        public static void CreateVehicleFuel(ushort vehicleId, float currentFuelCapacity, float maxFuelCapacity, ushort originalTargetBuilding)
+        public static bool VehicleFuelExist(ushort vehicleId) => VehiclesFuel.ContainsKey(vehicleId);
+
+        public static bool ParkedVehicleFuelExist(ushort parkedVehicleId) => ParkedVehiclesFuel.ContainsKey(parkedVehicleId);
+
+        public static VehicleFuelCapacity CreateVehicleFuel(ushort vehicleId, float currentFuelCapacity, float maxFuelCapacity, ushort originalTargetBuilding)
         {
-            if (!VehiclesFuel.TryGetValue(vehicleId, out _))
+            var vehicleFuelCapacity = new VehicleFuelCapacity
             {
-                var vehicleFuelCapacity = new VehicleFuelCapacity
-                {
-                    CurrentFuelCapacity = currentFuelCapacity,
-                    MaxFuelCapacity = maxFuelCapacity,
-                    OriginalTargetBuilding = originalTargetBuilding
-                };
-                VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
-            }
+                CurrentFuelCapacity = currentFuelCapacity,
+                MaxFuelCapacity = maxFuelCapacity,
+                OriginalTargetBuilding = originalTargetBuilding
+            };
+
+            VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
+
+            return vehicleFuelCapacity;
         }
 
-        public static void CreateParkedVehicleFuel(ushort parkedVehicleId, float currentFuelCapacity, float maxFuelCapacity, ushort originalTargetBuilding)
+        public static VehicleFuelCapacity CreateParkedVehicleFuel(ushort parkedVehicleId, float currentFuelCapacity, float maxFuelCapacity, ushort originalTargetBuilding)
         {
-            if (!ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
+            var vehicleFuelCapacity = new VehicleFuelCapacity
             {
-                var vehicleFuelCapacity = new VehicleFuelCapacity
-                {
-                    CurrentFuelCapacity = currentFuelCapacity,
-                    MaxFuelCapacity = maxFuelCapacity,
-                    OriginalTargetBuilding = originalTargetBuilding
-                };
-                ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
-            }
+                CurrentFuelCapacity = currentFuelCapacity,
+                MaxFuelCapacity = maxFuelCapacity,
+                OriginalTargetBuilding = originalTargetBuilding
+            };
+
+            ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
+
+            return vehicleFuelCapacity;
         }
 
 
@@ -71,20 +75,36 @@ namespace CarRentalAndBuyMod.Managers
 
         public static void SetVehicleFuel(ushort vehicleId, float added_fuel)
         {
-            var vehicleFuelCapacity = VehiclesFuel[vehicleId];
-            vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
-            VehiclesFuel[vehicleId] = vehicleFuelCapacity;
+            if (VehiclesFuel.TryGetValue(vehicleId, out var vehicleFuelCapacity))
+            {
+                vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
+                VehiclesFuel[vehicleId] = vehicleFuelCapacity;
+            }
         }
 
         public static void SetParkedVehicleFuel(ushort parkedVehicleId, float added_fuel)
         {
-            var vehicleFuelCapacity = ParkedVehiclesFuel[parkedVehicleId];
-            vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
-            ParkedVehiclesFuel[parkedVehicleId] = vehicleFuelCapacity;
+            if (ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out var vehicleFuelCapacity))
+            {
+                vehicleFuelCapacity.CurrentFuelCapacity += added_fuel;
+                ParkedVehiclesFuel[parkedVehicleId] = vehicleFuelCapacity;
+            }
         }
 
-        public static void RemoveVehicleFuel(ushort vehicleId) => VehiclesFuel.Remove(vehicleId);
+        public static void RemoveVehicleFuel(ushort vehicleId)
+        {
+            if (VehiclesFuel.TryGetValue(vehicleId, out var _))
+            {
+                VehiclesFuel.Remove(vehicleId);
+            }
+        }
 
-        public static void RemoveParkedVehicleFuel(ushort parkedVehicleId) => ParkedVehiclesFuel.Remove(parkedVehicleId);
+        public static void RemoveParkedVehicleFuel(ushort parkedVehicleId)
+        {
+            if (ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out var _))
+            {
+                ParkedVehiclesFuel.Remove(parkedVehicleId);
+            }
+        }
     }
 }
