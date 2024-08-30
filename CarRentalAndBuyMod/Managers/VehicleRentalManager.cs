@@ -21,26 +21,38 @@ namespace CarRentalAndBuyMod.Managers
 
         public static Rental GetVehicleRental(uint citizenId)
         {
-            return !VehicleRentals.TryGetValue(citizenId, out var rental) ? default : rental;
+            return VehicleRentals.TryGetValue(citizenId, out var rental) ? rental : default;
         }
 
-        public static void CreateVehicleRental(uint citizenId, ushort rentedVehicleID, ushort carRentalBuildingID)
+        public static Rental CreateVehicleRental(uint citizenId, ushort rentedVehicleID, ushort carRentalBuildingID)
         {
-            if (!VehicleRentals.TryGetValue(citizenId, out _))
+            var rental = new Rental()
             {
-                var rental = new Rental()
-                {
-                    RentedVehicleID = rentedVehicleID,
-                    CarRentalBuildingID = carRentalBuildingID,
-                };
-                VehicleRentals.Add(citizenId, rental);
+                RentedVehicleID = rentedVehicleID,
+                CarRentalBuildingID = carRentalBuildingID,
+            };
+            VehicleRentals.Add(citizenId, rental);
+
+            return rental;
+        }
+
+        public static bool VehicleRentalExist(uint citizenId) => VehicleRentals.ContainsKey(citizenId);
+
+        public static void SetVehicleRental(uint citizenId, Rental rental)
+        {
+            if (VehicleRentals.TryGetValue(citizenId, out var _))
+            {
+                VehicleRentals[citizenId] = rental;
             }
         }
 
-        public static void SetVehicleRental(uint citizenId, Rental rental) => VehicleRentals[citizenId] = rental;
-
-
-        public static void RemoveVehicleRental(uint citizenId) => VehicleRentals.Remove(citizenId);
+        public static void RemoveVehicleRental(uint citizenId)
+        {
+            if (VehicleRentals.TryGetValue(citizenId, out var _))
+            {
+                VehicleRentals.Remove(citizenId);
+            }
+        }
     }
 
 }
