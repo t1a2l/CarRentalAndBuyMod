@@ -412,12 +412,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        private static bool IsRoadConnection(ushort building)
+        private static bool IsRoadConnection(ushort buildingId)
         {
-            if (building != 0)
+            if (buildingId != 0)
             {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
-                if ((instance.m_buildings.m_buffer[building].m_flags & Building.Flags.IncomingOutgoing) != 0 && instance.m_buildings.m_buffer[building].Info.m_class.m_service == ItemClass.Service.Road)
+                var building = instance.m_buildings.m_buffer[buildingId];
+
+                if (building.Info.GetAI() is OutsideConnectionAI && (building.m_flags & Building.Flags.IncomingOutgoing) != 0 && building.Info.m_class.m_service == ItemClass.Service.Road)
                 {
                     return true;
                 }
