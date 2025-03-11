@@ -133,19 +133,29 @@ namespace CarRentalAndBuyMod.AI
             base.CreateBuilding(buildingID, ref data);
             int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
             Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, m_visitPlaceCount, 0, 0);
-            GasStationFuelManager.CreateGasStationFuel(buildingID);
+            if(!GasStationFuelManager.GasStationFuelExist(buildingID))
+            {
+                GasStationFuelManager.CreateGasStationFuel(buildingID);
+            }
         }
 
         public override void ReleaseBuilding(ushort buildingID, ref Building data)
         {
             base.ReleaseBuilding(buildingID, ref data);
-            GasStationFuelManager.RemoveGasStationFuel(buildingID);
+            if (GasStationFuelManager.GasStationFuelExist(buildingID))
+            {
+                GasStationFuelManager.RemoveGasStationFuel(buildingID);
+            }
         }
 
         public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
         {
             base.BuildingLoaded(buildingID, ref data, version);
             EnsureCitizenUnits(buildingID, ref data);
+            if (!GasStationFuelManager.GasStationFuelExist(buildingID))
+            {
+                GasStationFuelManager.CreateGasStationFuel(buildingID);
+            }
         }
 
         public override void EndRelocating(ushort buildingID, ref Building data)

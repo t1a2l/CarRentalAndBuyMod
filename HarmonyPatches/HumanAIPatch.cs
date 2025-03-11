@@ -17,22 +17,25 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             ref var targetBuilding = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
 
-            if (__instance.m_info.GetAI() is TouristAI touristAI && targetBuilding.Info.GetAI() is CarRentalAI carRentalAI && VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
+            if (__instance.m_info.GetAI() is TouristAI touristAI && targetBuilding.Info.GetAI() is CarRentalAI carRentalAI)
             {
-                var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
-                // i am here to return the car and leave the city
-                if (rental.CarRentalBuildingID == citizenData.m_targetBuilding)
+                if(VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
                 {
-                    Debug.Log("ReturnRentalVehicle");
-                    // get original outside connection target
-                    var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                    CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-                    Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
-                    VehicleRentalManager.RemoveVehicleRental(citizenData.m_citizen);
-                    vehicle.Unspawn(citizen.m_vehicle);
-                    // move to outside connection
-                    __instance.SetTarget(instanceID, ref citizenData, targeBuildingId);
-                    return false;
+                    var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
+                    // i am here to return the car and leave the city
+                    if (rental.CarRentalBuildingID == citizenData.m_targetBuilding && CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
+                    {
+                        Debug.Log("ReturnRentalVehicle");
+                        // get original outside connection target
+                        var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
+                        CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
+                        Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
+                        VehicleRentalManager.RemoveVehicleRental(citizenData.m_citizen);
+                        vehicle.Unspawn(citizen.m_vehicle);
+                        // move to outside connection
+                        __instance.SetTarget(instanceID, ref citizenData, targeBuildingId);
+                        return false;
+                    }
                 }
                 else
                 {

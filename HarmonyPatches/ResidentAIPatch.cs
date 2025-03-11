@@ -145,7 +145,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
 
-            if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarDealerships(citizenData.m_frame0.m_position))
+            if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarDealerships(citizenData.m_frame0.m_position) && 
+                !CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
             {
                 CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
                 FindCarDealershipPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarBuy);
@@ -183,7 +184,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             instance2.m_lanes.m_buffer[laneID].GetClosestPosition(vector2, out var position, out var laneOffset);
             byte lastPathOffset = (byte)Mathf.Clamp(Mathf.RoundToInt(laneOffset * 255f), 0, 255);
             position = vector2 + Vector3.ClampMagnitude(position - vector2, 5f);
-            if (instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false))
+            var vehicleCreated = instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false)
+            if (vehicleCreated && CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
             {
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                 if (targeBuildingId != 0)
