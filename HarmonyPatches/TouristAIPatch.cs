@@ -26,22 +26,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
-            var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
-            if (data.m_targetBuilding != 0 && !rental.Equals(default(VehicleRentalManager.Rental)))
+            if (IsRoadConnection(data.m_targetBuilding) && data.m_targetBuilding != 0 && VehicleRentalManager.VehicleRentalExist(data.m_citizen))
             {
-                if (IsRoadConnection(data.m_targetBuilding))
-                {
-                    Debug.Log("SetTargetRoadConnection");
-                    CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
-                    __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
-                }
+                Debug.Log("SetTargetRoadConnection");
+                CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
+                var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
             }
         }
 
-        [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(ushort), typeof(Citizen), typeof(InstanceID)],
+        [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref])]
         [HarmonyPostfix]
-        public static void GetLocalizedStatus(ushort instanceID, ref Citizen data, ref InstanceID target, ref string __result)
+        public static void GetLocalizedStatus(uint citizenID, ref Citizen data, ref InstanceID target, ref string __result)
         {
             if (data.m_instance != 0)
             {
@@ -85,17 +82,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
                 }
 
-                var citizenId = data.m_citizen;
-
-                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Key == citizenId).FirstOrDefault().Value;
-
-                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                if(VehicleRentalManager.VehicleRentalExist(data.m_citizen))
                 {
-                    __result = Color.yellow;
-                }
-                else
-                {
-                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                    var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                    if (rental.CarRentalBuildingID == Chosen_Building)
+                    {
+                        __result = Color.yellow;
+                    }
+                    else
+                    {
+                        __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                    }
                 }
                 return false;
             }
@@ -108,9 +105,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static bool GetVehicleInfoPrefix(ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, ref VehicleInfo trailer, ref VehicleInfo __result)
         {
-            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
-            if (!rental.Equals(default(VehicleRentalManager.Rental)))
+            if (VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
             {
+                var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
                 CitizenManager instance3 = Singleton<CitizenManager>.instance;
                 ushort vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle;
                 ushort parked_vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
@@ -134,7 +131,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
             // if you come from outside from road connection you can spawn a car
             if (citizenData.m_sourceBuilding != 0 && IsRoadConnection(citizenData.m_sourceBuilding))
             {
@@ -203,10 +199,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
             // tourist have a rental vehicle spawn it and use it and set the vehicle instead of the parked vehicle
-            if(!rental.Equals(default(VehicleRentalManager.Rental)))
+            if(VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
             {
+                var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
                 // edge case
-                if(rental.RentedVehicleID == parked_vehicle && sourceBuilding.Info.GetAI() is CarRentalAI)
+                if (rental.RentedVehicleID == parked_vehicle && sourceBuilding.Info.GetAI() is CarRentalAI)
                 {
                     __result = true;
                     return false;
@@ -227,7 +224,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
             // do not find a rental place if you are leaving the city or have a rented vehicle
-            if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarRentals(citizenData.m_frame0.m_position) && rental.Equals(default(VehicleRentalManager.Rental)))
+            if (!IsRoadConnection(citizenData.m_targetBuilding) && !VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen) && FindCarRentals(citizenData.m_frame0.m_position))
             {
                 CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
                 FindCarRentalPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarRent);

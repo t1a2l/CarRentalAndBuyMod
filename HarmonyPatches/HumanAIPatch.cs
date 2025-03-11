@@ -17,11 +17,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             ref var targetBuilding = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
 
-            if (__instance.m_info.GetAI() is TouristAI touristAI && targetBuilding.Info.GetAI() is CarRentalAI carRentalAI)
+            if (__instance.m_info.GetAI() is TouristAI touristAI && targetBuilding.Info.GetAI() is CarRentalAI carRentalAI && VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
             {
                 var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
                 // i am here to return the car and leave the city
-                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == citizenData.m_targetBuilding)
+                if (rental.CarRentalBuildingID == citizenData.m_targetBuilding)
                 {
                     Debug.Log("ReturnRentalVehicle");
                     // get original outside connection target

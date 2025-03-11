@@ -30,10 +30,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void CalculateTargetSpeed(VehicleAI __instance, ushort vehicleID, ref Vehicle data, float speedLimit, float curve, ref float __result)
         {
-            if (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI)
+            if (VehicleFuelManager.VehicleFuelExist(vehicleID) && (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)) && vehicleFuel.CurrentFuelCapacity < 10)
+                if (vehicleFuel.CurrentFuelCapacity < 10)
                 {
                     __result = 0.5f;
                 }
@@ -46,7 +46,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void SimulationStep(VehicleAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics)
         {
-            if (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI)
+            if (VehicleFuelManager.VehicleFuelExist(vehicleID) && (__instance is ExtendedPassengerCarAI || __instance is ExtendedCargoTruckAI))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 var CanAskForFuel = false;
@@ -96,7 +96,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         public static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
         {
-            if (instance is ExtendedPassengerCarAI)
+            if (instance is ExtendedPassengerCarAI && !VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 ushort driverInstance = GetDriverInstance(vehicleID, ref data);
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
@@ -107,7 +107,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, targetBuilding);
             }
-            if (instance is ExtendedCargoTruckAI)
+            if (instance is ExtendedCargoTruckAI && !VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
                 VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, data.m_targetBuilding);

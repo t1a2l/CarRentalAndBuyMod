@@ -30,12 +30,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 return true;
             }
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                 {
                     var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
                     VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);

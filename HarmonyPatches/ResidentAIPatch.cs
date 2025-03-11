@@ -33,10 +33,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-        [HarmonyPatch(typeof(ResidentAI), "GetLocalizedStatus", [typeof(ushort), typeof(Citizen), typeof(InstanceID)],
+        [HarmonyPatch(typeof(ResidentAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref])]
         [HarmonyPostfix]
-        public static void GetLocalizedStatus(ushort instanceID, ref Citizen data, ref InstanceID target, ref string __result)
+        public static void GetLocalizedStatus(uint citizenID, ref Citizen data, ref InstanceID target, ref string __result)
         {
             if (data.m_instance != 0)
             {

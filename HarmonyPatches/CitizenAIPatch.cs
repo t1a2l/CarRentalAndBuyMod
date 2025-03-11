@@ -20,7 +20,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
                 var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
-                if (targetBuilding.Info.GetAI() is CarRentalAI && rental.Equals(default(VehicleRentalManager.Rental)))
+                if (targetBuilding.Info.GetAI() is CarRentalAI && !VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
                 {
                     Debug.Log("vehicleInfoNull");
                     vehicleInfo = null;

@@ -111,18 +111,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 CitizenManager instance2 = Singleton<CitizenManager>.instance;
                 ushort parkedVehicle = instance2.m_citizens.m_buffer[__state].m_parkedVehicle;
 
-                var rental = VehicleRentalManager.GetVehicleRental(__state);
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-
-                if (!rental.Equals(default(VehicleRentalManager.Rental)))
+                if (VehicleRentalManager.VehicleRentalExist(__state))
                 {
                     Debug.Log("SetRentalParkingVehicle");
+                    var rental = VehicleRentalManager.GetVehicleRental(__state);
                     rental.RentedVehicleID = parkedVehicle;
                     VehicleRentalManager.SetVehicleRental(__state, rental);
                 }
 
-                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                if (VehicleFuelManager.VehicleFuelExist(vehicleID))
                 {
+                    var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                     VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity, vehicleData.m_targetBuilding);
                     VehicleFuelManager.RemoveVehicleFuel(vehicleID);
                 }
@@ -152,16 +151,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
                 }
 
-                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == vehicleID).FirstOrDefault().Value;
+                var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(kvp => kvp.Value.RentedVehicleID == vehicleID).Key;
 
-                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                if (rentalKey != 0)
                 {
-                    __result = Color.yellow;
+                    var rental = VehicleRentalManager.GetVehicleRental(rentalKey);
+                    if (rental.CarRentalBuildingID == Chosen_Building)
+                    {
+                        __result = Color.yellow;
+                    }
+                    else
+                    {
+                        __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                    }
                 }
-                else
-                {
-                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
-                }
+
                 return false;
             }
             return true;
@@ -189,16 +193,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
                 }
 
-                var rental = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == parkedVehicleID).FirstOrDefault().Value;
+                var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(kvp => kvp.Value.RentedVehicleID == parkedVehicleID).Key;
 
-                if (!rental.Equals(default(VehicleRentalManager.Rental)) && rental.CarRentalBuildingID == Chosen_Building)
+                if (rentalKey != 0)
                 {
-                    __result = Color.yellow;
+                    var rental = VehicleRentalManager.GetVehicleRental(rentalKey);
+                    if (rental.CarRentalBuildingID == Chosen_Building)
+                    {
+                        __result = Color.yellow;
+                    }
+                    else
+                    {
+                        __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                    }
                 }
-                else
-                {
-                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
-                }
+
                 return false;
             }
             return true;
@@ -237,12 +246,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static bool ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
-                if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f && !vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                 {
                     var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
                     VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);

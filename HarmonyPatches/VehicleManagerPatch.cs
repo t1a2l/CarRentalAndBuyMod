@@ -14,14 +14,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void ReleaseVehicle(ushort vehicle)
         {
-            var rentalObject = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == vehicle).FirstOrDefault();
+            var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(z => z.Value.RentedVehicleID == vehicle).Key;
 
-            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)))
+            if (VehicleRentalManager.VehicleRentalExist(rentalKey))
             {
-                VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
+                VehicleRentalManager.RemoveVehicleRental(rentalKey);
             }
 
-            if (VehicleFuelManager.VehiclesFuel.TryGetValue(vehicle, out _))
+            if (VehicleFuelManager.VehicleFuelExist(vehicle))
             {
                 VehicleFuelManager.RemoveVehicleFuel(vehicle);
             }
@@ -31,14 +31,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void ReleaseParkedVehicle(ushort parked)
         {
-            var rentalObject = VehicleRentalManager.VehicleRentals.Where(z => z.Value.RentedVehicleID == parked).FirstOrDefault();
+            var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(z => z.Value.RentedVehicleID == parked).Key;
 
-            if (!rentalObject.Value.Equals(default(VehicleRentalManager.Rental)))
+            if (VehicleRentalManager.VehicleRentalExist(rentalKey))
             {
-                VehicleRentalManager.RemoveVehicleRental(rentalObject.Key);
+                VehicleRentalManager.RemoveVehicleRental(rentalKey);
             }
 
-            if (VehicleFuelManager.ParkedVehiclesFuel.TryGetValue(parked, out _))
+            if (VehicleFuelManager.ParkedVehicleFuelExist(parked))
             {
                 VehicleFuelManager.RemoveParkedVehicleFuel(parked);
             }

@@ -19,33 +19,30 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 panel.height = 290;
             }
-            if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && Type != null)
+            if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && Type != null && VehicleFuelManager.VehicleFuelExist(___m_InstanceID.Vehicle))
             {
                 var info = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.Vehicle);
-                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                double value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
+                bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                Type.text += Environment.NewLine;
+                Type.parent.height = 35;
+                if (isElectric)
                 {
-                    double value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                    bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                    Type.text += Environment.NewLine;
-                    Type.parent.height = 35;
-                    if (isElectric)
-                    {
-                        Type.text += "Battery Percent:  " + value.ToString("#0%");
-                    }
-                    else
-                    {
-                        Type.text += "Fuel Percent:  " + value.ToString("#0%");
-                    }
+                    Type.text += "Battery Percent:  " + value.ToString("#0%");
+                }
+                else
+                {
+                    Type.text += "Fuel Percent:  " + value.ToString("#0%");
                 }
             }
             else if (___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && Type != null)
             {
-                var info = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
-                var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(___m_InstanceID.ParkedVehicle);
-                if (!parkedVehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
+                if (VehicleFuelManager.ParkedVehicleFuelExist(___m_InstanceID.ParkedVehicle))
                 {
+                    var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(___m_InstanceID.ParkedVehicle);
                     float value = parkedVehicleFuel.CurrentFuelCapacity / parkedVehicleFuel.MaxFuelCapacity;
+                    var info = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
                     bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                     Type.text += Environment.NewLine;
                     Type.parent.height = 35;
@@ -67,16 +64,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static void CityServiceVehicleUpdateBindings(CityServiceVehicleWorldInfoPanel __instance, ref InstanceID ___m_InstanceID)
         {
             var Type = __instance.Find<UILabel>("Type");
-            if (___m_InstanceID.Vehicle != 0 && Type != null)
+            if (___m_InstanceID.Vehicle != 0 && Type != null && VehicleFuelManager.VehicleFuelExist(___m_InstanceID.Vehicle))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.Vehicle);
-                if (!vehicleFuel.Equals(default(VehicleFuelManager.VehicleFuelCapacity)))
-                {
-                    Type.parent.height = 35;
-                    Type.text += Environment.NewLine;
-                    float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                    Type.text += "Fuel Percent:  " + value.ToString("#0%");
-                }
+                Type.parent.height = 35;
+                Type.text += Environment.NewLine;
+                float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
+                Type.text += "Fuel Percent:  " + value.ToString("#0%");
                 var panel = __instance.Find<UIPanel>("(Library) CityServiceVehicleWorldInfoPanel");
                 if (panel != null)
                 {
