@@ -113,7 +113,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 if (VehicleRentalManager.VehicleRentalExist(__state))
                 {
-                    Debug.Log("SetRentalParkingVehicle");
+                    Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalParkingVehicle");
                     var rental = VehicleRentalManager.GetVehicleRental(__state);
                     rental.RentedVehicleID = parkedVehicle;
                     VehicleRentalManager.SetVehicleRental(__state, rental);
@@ -121,6 +121,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 if (VehicleFuelManager.VehicleFuelExist(vehicleID))
                 {
+                    Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalParkingVehicleFuel");
                     var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                     VehicleFuelManager.CreateParkedVehicleFuel(parkedVehicle, vehicleFuel.CurrentFuelCapacity, vehicleFuel.MaxFuelCapacity, vehicleData.m_targetBuilding);
                     VehicleFuelManager.RemoveVehicleFuel(vehicleID);

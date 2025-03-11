@@ -190,7 +190,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                 if (targeBuildingId != 0)
                 {
-                    Debug.Log("SpawnBoughtVehicleSpecial");
+                    Debug.Log("CarRentalAndBuyMod: ResidentAI - SpawnBoughtVehicleSpecial");
                     ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
                     data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
                     citizenData.m_sourceBuilding = citizenData.m_targetBuilding;
@@ -199,7 +199,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 else
                 {
-                    Debug.Log("SpawnBoughtVehicleNormal");
+                    Debug.Log("CarRentalAndBuyMod: ResidentAI - SpawnBoughtVehicleNormal");
                     Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
                     if (num8 != 0)
                     {

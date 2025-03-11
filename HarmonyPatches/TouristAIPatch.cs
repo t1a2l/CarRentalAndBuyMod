@@ -28,7 +28,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             if (IsRoadConnection(data.m_targetBuilding) && data.m_targetBuilding != 0 && VehicleRentalManager.VehicleRentalExist(data.m_citizen) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
             {
-                Debug.Log("SetTargetRoadConnection");
+                Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
                 CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
                 var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
                 __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
@@ -211,7 +211,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
                 VehicleRentalManager.SetVehicleRental(citizenData.m_citizen, rental);
-                Debug.Log("SpawnVehicleHasRental");
+                Debug.Log("CarRentalAndBuyMod: TouristAI - SpawnVehicleHasRental");
                 SpawnRentalVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
                 Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
                 rental.RentedVehicleID = citizen.m_vehicle;
@@ -269,7 +269,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                 if (targeBuildingId != 0)
                 {
-                    Debug.Log("SpawnRentalVehicleSpecial");
+                    Debug.Log("CarRentalAndBuyMod: TouristAI - SpawnRentalVehicleSpecial");
                     ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
                     data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
                     citizenData.m_sourceBuilding = citizenData.m_targetBuilding;
@@ -278,7 +278,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 else
                 {
-                    Debug.Log("SpawnRentalVehicleNormal");
+                    Debug.Log("CarRentalAndBuyMod: TouristAI - SpawnRentalVehicleNormal");
                     Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
                     if (num8 != 0)
                     {

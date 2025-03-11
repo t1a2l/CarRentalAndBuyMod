@@ -22,7 +22,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
                 if (targetBuilding.Info.GetAI() is CarRentalAI && !VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
                 {
-                    Debug.Log("vehicleInfoNull");
+                    Debug.Log("CarRentalAndBuyMod: CitizenAIPatch - VehicleInfoNull");
                     vehicleInfo = null;
                 }
             }
