@@ -38,11 +38,8 @@ namespace CarRentalAndBuyMod.Serializer
             if (Data != null && Data.Length > iIndex)
             {
                 int iGasStationManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
-                Debug.Log("Global: " + iGlobalVersion + " BufferVersion: " + iGasStationManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
-                if (GasStationFuelManager.GasStationsFuel == null)
-                {
-                    GasStationFuelManager.GasStationsFuel = [];
-                }
+                Debug.Log("CarRentalAndBuyMod - Global: " + iGlobalVersion + " BufferVersion: " + iGasStationManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                GasStationFuelManager.GasStationsFuel ??= [];
                 int GasStationsFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
                 for (int i = 0; i < GasStationsFuel_Count; i++)
                 {

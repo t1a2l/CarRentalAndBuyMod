@@ -14,7 +14,7 @@ namespace CarRentalAndBuyMod.Serializer
 
         public static void SaveData(FastList<byte> Data)
         {
-            Debug.Log("save VehicleRentals_Count: " + VehicleRentalManager.VehicleRentals.Count);
+            Debug.Log("CarRentalAndBuyMod: Save VehicleRentals_Count: " + VehicleRentalManager.VehicleRentals.Count);
 
             // Write out metadata
             StorageData.WriteUInt16(iVEHICLE_RENTAL_MANAGER_DATA_VERSION, Data);
@@ -41,13 +41,10 @@ namespace CarRentalAndBuyMod.Serializer
             if (Data != null && Data.Length > iIndex)
             {
                 int iVehicleRentalManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
-                Debug.Log("Global: " + iGlobalVersion + " BufferVersion: " + iVehicleRentalManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
-                if (VehicleRentalManager.VehicleRentals == null)
-                {
-                    VehicleRentalManager.VehicleRentals = [];
-                }
+                Debug.Log("CarRentalAndBuyMod - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleRentalManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                VehicleRentalManager.VehicleRentals ??= [];
                 int VehicleRentals_Count = StorageData.ReadInt32(Data, ref iIndex);
-                Debug.Log("load VehicleRentals_Count: " + VehicleRentals_Count);
+                Debug.Log("CarRentalAndBuyMod: Load VehicleRentals_Count: " + VehicleRentals_Count);
                 for (int i = 0; i < VehicleRentals_Count; i++)
                 {
                     CheckStartTuple($"Buffer({i})", iVehicleRentalManagerVersion, Data, ref iIndex);

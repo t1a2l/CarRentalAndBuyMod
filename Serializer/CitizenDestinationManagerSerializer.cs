@@ -38,11 +38,8 @@ namespace CarRentalAndBuyMod.Serializer
             if (Data != null && Data.Length > iIndex)
             {
                 int iCitizenDestinationManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
-                Debug.Log("Global: " + iGlobalVersion + " BufferVersion: " + iCitizenDestinationManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
-                if (CitizenDestinationManager.CitizenDestination == null)
-                {
-                    CitizenDestinationManager.CitizenDestination = [];
-                }
+                Debug.Log("CarRentalAndBuyMod - Global: " + iGlobalVersion + " BufferVersion: " + iCitizenDestinationManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                CitizenDestinationManager.CitizenDestination ??= [];
                 int CitizenDestination_Count = StorageData.ReadInt32(Data, ref iIndex);
                 for (int i = 0; i < CitizenDestination_Count; i++)
                 {

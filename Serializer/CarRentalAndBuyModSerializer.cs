@@ -36,7 +36,7 @@ namespace CarRentalAndBuyMod.Serializer
 
                         SaveGameFileVersion = StorageData.ReadUInt16(Data, ref Index);
 
-                        Debug.Log("Data length: " + Data.Length.ToString() + "; Data Version: " + SaveGameFileVersion);
+                        Debug.Log("CarRentalAndBuyMod - Data length: " + Data.Length.ToString() + "; Data Version: " + SaveGameFileVersion);
 
                         if (SaveGameFileVersion <= DataVersion)
                         {
@@ -107,7 +107,7 @@ namespace CarRentalAndBuyMod.Serializer
 
         public void OnSaveData()
         {
-            Debug.Log("OnSaveData - Start");
+            Debug.Log("CarRentalAndBuyMod: OnSaveData - Start");
             try
             {
                 if (m_serializableData != null)
@@ -141,9 +141,9 @@ namespace CarRentalAndBuyMod.Serializer
             }
             catch (Exception ex)
             {
-                Debug.Log("Could not save data. " + ex.Message);
+                Debug.Log("CarRentalAndBuyMod: Could not save data. " + ex.Message);
             }
-            Debug.Log("OnSaveData - Finish");
+            Debug.Log("CarRentalAndBuyMod: OnSaveData - Finish");
         }
 
         private void CheckStartTuple(string sTupleLocation, int iDataVersion, byte[] Data, ref int iIndex)
