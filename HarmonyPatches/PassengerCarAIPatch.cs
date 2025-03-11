@@ -111,7 +111,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 CitizenManager instance2 = Singleton<CitizenManager>.instance;
                 ushort parkedVehicle = instance2.m_citizens.m_buffer[__state].m_parkedVehicle;
 
-                if (VehicleRentalManager.VehicleRentalExist(__state))
+                if (parkedVehicle != 0 && VehicleRentalManager.VehicleRentalExist(__state))
                 {
                     Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalParkingVehicle");
                     var rental = VehicleRentalManager.GetVehicleRental(__state);
@@ -119,7 +119,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     VehicleRentalManager.SetVehicleRental(__state, rental);
                 }
 
-                if (VehicleFuelManager.VehicleFuelExist(vehicleID))
+                if (parkedVehicle != 0 && VehicleFuelManager.VehicleFuelExist(vehicleID))
                 {
                     Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalParkingVehicleFuel");
                     var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
