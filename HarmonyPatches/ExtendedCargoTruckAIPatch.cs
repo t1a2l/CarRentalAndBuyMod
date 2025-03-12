@@ -33,7 +33,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
                 if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                 {
