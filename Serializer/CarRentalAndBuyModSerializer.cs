@@ -60,15 +60,6 @@ namespace CarRentalAndBuyMod.Serializer
                                     break;
                                 }
 
-                                CheckStartTuple("GasStationFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
-                                GasStationFuelManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
-                                CheckEndTuple("GasStationFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
-
-                                if (Index == Data.Length)
-                                {
-                                    break;
-                                }
-
                                 CheckStartTuple("VehicleFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
                                 VehicleFuelManagerSerializer.LoadData(SaveGameFileVersion, Data, ref Index);
                                 CheckEndTuple("VehicleFuelManagerSerializer", SaveGameFileVersion, Data, ref Index);
@@ -124,11 +115,6 @@ namespace CarRentalAndBuyMod.Serializer
                     // rented cars
                     StorageData.WriteUInt32(uiTUPLE_START, Data);
                     VehicleRentalManagerSerializer.SaveData(Data);
-                    StorageData.WriteUInt32(uiTUPLE_END, Data);
-
-                    // Gas Stations Fuel settings
-                    StorageData.WriteUInt32(uiTUPLE_START, Data);
-                    GasStationFuelManagerSerializer.SaveData(Data);
                     StorageData.WriteUInt32(uiTUPLE_END, Data);
 
                     // Vehicles Fuel settings

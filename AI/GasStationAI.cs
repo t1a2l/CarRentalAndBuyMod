@@ -1,6 +1,5 @@
 using ColossalFramework;
 using MoreTransferReasons;
-using CarRentalAndBuyMod.Managers;
 using ColossalFramework.DataBinding;
 using System.Text;
 using UnityEngine;
@@ -32,11 +31,11 @@ namespace CarRentalAndBuyMod.AI
         public int m_visitPlaceCount = 10;
 
         [CustomizableProperty("Fuel Capacity")]
-        public int m_fuelCapacity = 50000;
+        public int m_maxFuelCapacity = 50000;
 
-        ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
+        readonly ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
-        ExtendedTransferManager.TransferReason m_outgoingResource = ExtendedTransferManager.TransferReason.FuelVehicle;
+        readonly ExtendedTransferManager.TransferReason m_outgoingResource = ExtendedTransferManager.TransferReason.FuelVehicle;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -133,29 +132,17 @@ namespace CarRentalAndBuyMod.AI
             base.CreateBuilding(buildingID, ref data);
             int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
             Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, m_visitPlaceCount, 0, 0);
-            if(!GasStationFuelManager.GasStationFuelExist(buildingID))
-            {
-                GasStationFuelManager.CreateGasStationFuel(buildingID);
-            }
         }
 
         public override void ReleaseBuilding(ushort buildingID, ref Building data)
         {
             base.ReleaseBuilding(buildingID, ref data);
-            if (GasStationFuelManager.GasStationFuelExist(buildingID))
-            {
-                GasStationFuelManager.RemoveGasStationFuel(buildingID);
-            }
         }
 
         public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
         {
             base.BuildingLoaded(buildingID, ref data, version);
             EnsureCitizenUnits(buildingID, ref data);
-            if (!GasStationFuelManager.GasStationFuelExist(buildingID))
-            {
-                GasStationFuelManager.CreateGasStationFuel(buildingID);
-            }
         }
 
         public override void EndRelocating(ushort buildingID, ref Building data)
@@ -198,23 +185,20 @@ namespace CarRentalAndBuyMod.AI
 
         public void ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
         {
-            amount = GasStationFuelManager.GetGasStationFuel(buildingID);
-            max = m_fuelCapacity;
+            amount = data.m_customBuffer1;
+            max = m_maxFuelCapacity;
         }
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
+            amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity);
             if (material == m_incomingResource)
             {
-                int fuelCapacity = m_fuelCapacity;
-                int fuelAvaliable = GasStationFuelManager.GetGasStationFuel(buildingID);
-                amountDelta = Mathf.Clamp(amountDelta, 0, fuelCapacity - fuelAvaliable);
-                GasStationFuelManager.SetGasStationFuel(buildingID, (ushort)(fuelAvaliable + amountDelta));
+                data.m_customBuffer1 += (ushort)amountDelta;
             }
             if (material == m_outgoingResource)
             {
-                int fuelAvaliable = GasStationFuelManager.GetGasStationFuel(buildingID);
-                GasStationFuelManager.SetGasStationFuel(buildingID, (ushort)(fuelAvaliable - amountDelta));
+                data.m_customBuffer1 -= (ushort)amountDelta;
             }
         }
 
@@ -257,11 +241,10 @@ namespace CarRentalAndBuyMod.AI
                     Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, buildingData.m_position, m_noiseRadius);
                 }
                 HandleDead(buildingID, ref buildingData, ref behaviour, totalWorkerCount);
-                var actualFuelCapacity = GasStationFuelManager.GetGasStationFuel(buildingID);
-                int missingFuel = m_fuelCapacity - actualFuelCapacity;
+                int missingFuel = m_maxFuelCapacity - buildingData.m_customBuffer1;
                 if (buildingData.m_fireIntensity == 0)
                 {
-                    if (missingFuel > m_fuelCapacity * 0.8)
+                    if (missingFuel > m_maxFuelCapacity * 0.8)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -271,7 +254,7 @@ namespace CarRentalAndBuyMod.AI
                         Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_incomingResource, offer);
                     }
 
-                    if (actualFuelCapacity > m_fuelCapacity * 0.1)
+                    if (buildingData.m_customBuffer1 > m_maxFuelCapacity * 0.1)
                     {
                         ExtendedTransferManager.Offer offer = default;
                         offer.Building = buildingID;
@@ -294,8 +277,7 @@ namespace CarRentalAndBuyMod.AI
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
         {
             StringBuilder stringBuilder = new();
-            var amount = GasStationFuelManager.GetGasStationFuel(buildingID);
-            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", amount, m_fuelCapacity));
+            stringBuilder.Append(string.Format("Fuel Liters Avaliable: {0} of {1}", data.m_customBuffer1, m_maxFuelCapacity));
             stringBuilder.Append(Environment.NewLine);
             return stringBuilder.ToString();
         }
