@@ -30,7 +30,6 @@ namespace CarRentalAndBuyMod
             {
                 CitizenDestinationManager.Init();
                 VehicleRentalManager.Init();
-                GasStationFuelManager.Init();
                 VehicleFuelManager.Init();
             }
             catch (Exception e)
@@ -38,7 +37,6 @@ namespace CarRentalAndBuyMod
                 Debug.LogError(e.ToString());
                 CitizenDestinationManager.Deinit();
                 VehicleRentalManager.Deinit();
-                GasStationFuelManager.Deinit();
                 VehicleFuelManager.Deinit();
             }
         }
@@ -50,7 +48,6 @@ namespace CarRentalAndBuyMod
             {
                 CitizenDestinationManager.Deinit();
                 VehicleRentalManager.Deinit();
-                GasStationFuelManager.Deinit();
                 VehicleFuelManager.Deinit();
             }
             catch (Exception e)
