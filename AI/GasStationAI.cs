@@ -191,13 +191,14 @@ namespace CarRentalAndBuyMod.AI
 
         public void ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
         {
-            amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity);
             if (material == m_incomingResource)
             {
+                amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity - data.m_customBuffer1);
                 data.m_customBuffer1 += (ushort)amountDelta;
             }
             if (material == m_outgoingResource)
             {
+                amountDelta = Mathf.Clamp(amountDelta, 0, data.m_customBuffer1);
                 data.m_customBuffer1 -= (ushort)amountDelta;
             }
         }
