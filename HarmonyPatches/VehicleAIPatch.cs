@@ -76,7 +76,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         }
                     }
                     float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                    bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(32U) == 0;
+                    bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
                     if ((percent > 0.2 && percent < 0.8 && shouldFuel) || percent <= 0.2)
                     {
                         ExtendedTransferManager.Offer offer = default;
