@@ -60,7 +60,7 @@ namespace CarRentalAndBuyMod.AI
 				case InfoManager.InfoMode.NoisePollution:
 				{
 					int noiseAccumulation = m_noiseAccumulation;
-					return CommonBuildingAI.GetNoisePollutionColor(noiseAccumulation);
+					return GetNoisePollutionColor(noiseAccumulation);
 				}
 				case InfoManager.InfoMode.Tourism:
 					switch (Singleton<InfoManager>.instance.CurrentSubMode)
@@ -68,7 +68,7 @@ namespace CarRentalAndBuyMod.AI
 					case InfoManager.SubInfoMode.Default:
 						if (data.m_tempExport != 0 || data.m_finalExport != 0)
 						{
-							return CommonBuildingAI.GetTourismColor(Mathf.Max(data.m_tempExport, data.m_finalExport));
+							return GetTourismColor(Mathf.Max(data.m_tempExport, data.m_finalExport));
 						}
 						return Singleton<InfoManager>.instance.m_properties.m_neutralColor;
 					case InfoManager.SubInfoMode.WaterPower:
@@ -213,7 +213,7 @@ namespace CarRentalAndBuyMod.AI
             {
                 int goodsCapacity = m_rentalCarCapacity;
                 int customBuffer = data.m_customBuffer1;
-                amountDelta = Mathf.Clamp(amountDelta, 0, goodsCapacity - customBuffer);
+                amountDelta = Mathf.Clamp(5, 0, goodsCapacity - customBuffer);
                 data.m_customBuffer1 = (ushort)(customBuffer + amountDelta);
             }
         }

@@ -56,7 +56,7 @@ namespace CarRentalAndBuyMod.AI
 				case InfoManager.InfoMode.NoisePollution:
 				{
 					int noiseAccumulation = m_noiseAccumulation;
-					return CommonBuildingAI.GetNoisePollutionColor(noiseAccumulation);
+					return GetNoisePollutionColor(noiseAccumulation);
 				}
 				case InfoManager.InfoMode.Tourism:
 					switch (Singleton<InfoManager>.instance.CurrentSubMode)
@@ -64,7 +64,7 @@ namespace CarRentalAndBuyMod.AI
 					case InfoManager.SubInfoMode.Default:
 						if (data.m_tempExport != 0 || data.m_finalExport != 0)
 						{
-							return CommonBuildingAI.GetTourismColor(Mathf.Max(data.m_tempExport, data.m_finalExport));
+							return GetTourismColor(Mathf.Max(data.m_tempExport, data.m_finalExport));
 						}
 						return Singleton<InfoManager>.instance.m_properties.m_neutralColor;
 					case InfoManager.SubInfoMode.WaterPower:
@@ -212,7 +212,7 @@ namespace CarRentalAndBuyMod.AI
             {
                 int goodsCapacity = m_dealerCarCapacity;
                 int customBuffer = data.m_customBuffer1;
-                amountDelta = Mathf.Clamp(amountDelta, 0, goodsCapacity - customBuffer);
+                amountDelta = Mathf.Clamp(5, 0, goodsCapacity - customBuffer);
                 data.m_customBuffer1 = (ushort)(customBuffer + amountDelta);
             }
         }
@@ -291,9 +291,7 @@ namespace CarRentalAndBuyMod.AI
 		public override string GetLocalizedStats(ushort buildingID, ref Building data)
 		{
 			StringBuilder stringBuilder = new();
-            stringBuilder.Append(string.Format("DealerShip Cars Avaliable: {0} ", data.m_customBuffer1));
-            stringBuilder.Append(Environment.NewLine);
-            stringBuilder.Append(string.Format("DealerShip Cars Capcity: {0} ", m_dealerCarCapacity));
+            stringBuilder.Append(string.Format("DealerShip Cars: {0} of {1}", data.m_customBuffer1, m_dealerCarCapacity));
             stringBuilder.Append(Environment.NewLine);
 			return stringBuilder.ToString();
 		}
