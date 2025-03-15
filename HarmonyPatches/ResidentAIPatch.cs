@@ -65,7 +65,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-            var rental = VehicleRentalManager.GetVehicleRental(citizenData.m_citizen);
             // if you come from outside from road connection you can spawn a car
             if (citizenData.m_sourceBuilding != 0 && IsRoadConnection(citizenData.m_sourceBuilding))
             {
