@@ -22,6 +22,20 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
+        [HarmonyPatch(typeof(ExtendedCargoTruckAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        {
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI() is GasStationAI && VehicleFuelManager.VehicleFuelExist(vehicleID))
+            {
+                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                if (vehicleFuel.OriginalTargetBuilding == 0 && data.m_targetBuilding != 0)
+                {
+                    VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, data.m_targetBuilding);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtTarget")]
         [HarmonyPrefix]
         public static bool ArriveAtTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
@@ -42,6 +56,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
                     var targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                    VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
                     __instance.SetTarget(vehicleID, ref data, targetBuilding);
                     __result = false;
                     return false;
