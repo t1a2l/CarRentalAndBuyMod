@@ -5,7 +5,6 @@ using HarmonyLib;
 using MoreTransferReasons;
 using System;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -13,9 +12,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class PassengerCarAIPatch
     {
-        private delegate bool StartPathFindDelegate(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData);
-        private static readonly StartPathFindDelegate StartPathFind = AccessTools.MethodDelegate<StartPathFindDelegate>(typeof(PassengerCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], []), null, false);
-
         public static ushort Chosen_Building = 0;
 
         [HarmonyPatch(typeof(PassengerCarAI), "CanLeave")]
@@ -129,7 +125,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-
         [HarmonyPatch(typeof(PassengerCarAI), "GetColor", [typeof(ushort), typeof(Vehicle), typeof(InfoManager.InfoMode), typeof(InfoManager.SubInfoMode)],
             [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
@@ -226,23 +221,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
-        [HarmonyPrefix]
-        public static bool SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
-        {
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && !StartPathFind(__instance, vehicleID, ref data))
-            {
-                data.m_custom = 0;
-                __instance.SetTarget(vehicleID, ref data, 0);
-                data.Unspawn(vehicleID);
-                return false;
-            }
-            return true;
-        }
-
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
         [HarmonyPrefix]
-        public static bool ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        public static void ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
@@ -255,13 +236,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
-                    var targetBuilding = vehicleFuel.OriginalTargetBuilding;
-                    __instance.SetTarget(vehicleID, ref data, targetBuilding);
+                    data.m_flags |= Vehicle.Flags.Parking;
                     __result = true;
-                    return false;
                 }
             }
-            return true;
         }
 
         private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
@@ -274,5 +252,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             data.m_flags &= ~Vehicle.Flags.Stopped;
         }
+
     }
 }
