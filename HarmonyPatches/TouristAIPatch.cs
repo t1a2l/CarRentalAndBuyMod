@@ -1,11 +1,9 @@
 ﻿using CarRentalAndBuyMod.AI;
 using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
-using ColossalFramework.Math;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -26,13 +24,20 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
-            if (IsRoadConnection(data.m_targetBuilding) && data.m_targetBuilding != 0 && VehicleRentalManager.VehicleRentalExist(data.m_citizen) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
+            if (IsRoadConnection(data.m_targetBuilding) && data.m_targetBuilding != 0)
             {
-                Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
-                CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
-                var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
-                __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
+                if (VehicleRentalManager.VehicleRentalExist(data.m_citizen) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
+                {
+                    Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
+                    CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
+                    var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                    __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
+                }
+
             }
+
+
+            
         }
 
         [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
@@ -333,8 +338,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 citizenData.m_waitCounter = 0;
             }
         }
-
-        
 
         private static void FindCarRentalPlace(uint citizenID, ushort sourceBuilding, ExtendedTransferManager.TransferReason reason)
         {
