@@ -18,6 +18,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         private delegate VehicleInfo GetVehicleInfoDelegate(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(ResidentAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
+        [HarmonyPatch(typeof(ResidentAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTarget(ResidentAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
+        {
+            var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.VehicleFuelExist(vehicleId))
+            {
+                VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
+            }
+        }
+
         [HarmonyBefore(["me.tmpe"])]
         [HarmonyPatch(typeof(ResidentAI), "GetVehicleInfo")]
         [HarmonyPrefix]

@@ -21,8 +21,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(TouristAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         [HarmonyPatch(typeof(TouristAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTargetPrefix(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
+        {
+            var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.VehicleFuelExist(vehicleId))
+            {
+                VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
+            }
+        }
+
+        [HarmonyPatch(typeof(TouristAI), "SetTarget")]
         [HarmonyPostfix]
-        public static void SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
+        public static void SetTargetPostfix(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
             if (IsRoadConnection(data.m_targetBuilding) && data.m_targetBuilding != 0)
             {
@@ -33,11 +44,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
                     __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
                 }
-
             }
-
-
-            
         }
 
         [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
