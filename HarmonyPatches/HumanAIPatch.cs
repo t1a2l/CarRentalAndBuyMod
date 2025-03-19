@@ -2,7 +2,6 @@
 using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using HarmonyLib;
-using MoreTransferReasons;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -86,40 +85,5 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(HumanAI), "SimulationStep", [typeof(ushort), typeof(CitizenInstance), typeof(CitizenInstance.Frame), typeof(bool)],
-            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref, ArgumentType.Normal])]
-        [HarmonyPrefix]
-        public static bool SimulationStep(ushort instanceID, ref CitizenInstance citizenData, ref CitizenInstance.Frame frameData, bool lodPhysics)
-        {
-            if ((citizenData.m_flags & CitizenInstance.Flags.Blown) == 0 && (citizenData.m_flags & CitizenInstance.Flags.Floating) == 0
-                && (citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0 && (citizenData.m_flags & CitizenInstance.Flags.WaitingTransport) == 0
-                && (citizenData.m_flags & CitizenInstance.Flags.WaitingTaxi) == 0 && (citizenData.m_flags & CitizenInstance.Flags.EnteringVehicle) == 0)
-            {
-                ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                var vehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle];
-                if (citizen.m_vehicle != 0 && vehicle.Info.GetAI() is PassengerCarAI) 
-                {
-                    var vehicleFuel = VehicleFuelManager.GetVehicleFuel(citizen.m_vehicle);
-                    bool isElectric = vehicle.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                    if (vehicle.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && !isElectric)
-                    {
-                        float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                        VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(citizen.m_vehicle, 0);
-                        bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
-                        if ((percent > 0.2 && percent < 0.8 && shouldFuel) || percent <= 0.2)
-                        {
-                            ExtendedTransferManager.Offer offer = default;
-                            offer.Citizen = citizenData.m_citizen;
-                            offer.Position = frameData.m_position;
-                            offer.Amount = 1;
-                            offer.Active = true;
-                            Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
-                        }
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
     }
 }
