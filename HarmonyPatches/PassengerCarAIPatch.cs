@@ -1,6 +1,7 @@
 ﻿using CarRentalAndBuyMod.AI;
 using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
+using ColossalFramework.Globalization;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
@@ -214,32 +215,80 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void GetLocalizedStatus(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+            var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
+            ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
+            var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
+                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 target = InstanceID.Empty;
                 __result = "Getting fuel";
+                if (citizenInstance.m_targetBuilding == vehicleFuel.OriginalTargetBuilding)
+                {
+                    target.Building = citizenInstance.m_targetBuilding;
+                    __result += " and " + Locale.Get("VEHICLE_STATUS_GOINGTO");
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        {
+            var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
+            if(citizenId != 0)
+            {
+                var citizenInstanceId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_instance;
+                if(citizenInstanceId != 0)
+                {
+                    var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizenInstanceId];
+                    if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding].Info.GetAI() is GasStationAI && VehicleFuelManager.VehicleFuelExist(vehicleID))
+                    {
+                        var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                        if(vehicleFuel.OriginalTargetBuilding != 0)
+                        {
+                            data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
+                        }
+                    }
+                }
             }
         }
 
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
         [HarmonyPrefix]
-        public static void ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        public static bool ArriveAtTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
         {
             if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
-                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
+                var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
+                var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
+                ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
+                var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
+                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
                 if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                 {
-                    var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
                     VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
-                    data.m_flags |= Vehicle.Flags.Parking;
-                    __result = true;
+                    var originaltargetBuilding = vehicleFuel.OriginalTargetBuilding;
+                    VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
+                    if(originaltargetBuilding == citizenInstance.m_targetBuilding)
+                    {
+                        __result = true;
+                        return true;
+                    }
+                    else
+                    {
+                        var humanAI = citizen.GetCitizenInfo(citizenId).GetAI() as HumanAI;
+                        humanAI.StartMoving(citizenId, ref citizen, citizenInstance.m_targetBuilding, originaltargetBuilding);
+                        __result = false;
+                        return false;
+                    }   
                 }
             }
+            return true;
         }
 
         private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
