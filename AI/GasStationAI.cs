@@ -4,6 +4,7 @@ using ColossalFramework.DataBinding;
 using System.Text;
 using UnityEngine;
 using System;
+using ColossalFramework.Math;
 
 namespace CarRentalAndBuyMod.AI
 {
@@ -300,6 +301,12 @@ namespace CarRentalAndBuyMod.AI
             workPlaceCount1 = m_workPlaceCount1;
             workPlaceCount2 = m_workPlaceCount2;
             workPlaceCount3 = m_workPlaceCount3;
+        }
+
+        public override void CalculateUnspawnPosition(ushort buildingID, ref Building data, ref Randomizer randomizer, VehicleInfo info, out Vector3 position, out Vector3 target)
+        {
+            position = data.CalculateSidewalkPosition(0f, 2f);
+            target = position;
         }
 
     }
