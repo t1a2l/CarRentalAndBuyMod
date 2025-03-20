@@ -85,6 +85,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         if (instance5 != 0)
                         {
                             __state = instance2.m_instances.m_buffer[instance5].m_citizen;
+                            ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[instance2.m_instances.m_buffer[instance5].m_targetBuilding];
+                            if (building.Info.GetAI() is GasStationAI gasStationAI && vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
+                            {
+                                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                                VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                                var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
+                                FuelVehicle(vehicleID, ref vehicleData, gasStationAI, ref building, neededFuel);
+                                vehicleData.m_custom = 0;
+                            }
                             break;
                         }
                     }
