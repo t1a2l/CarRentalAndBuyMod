@@ -50,8 +50,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
                 {
-                    bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                    if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && !isElectric)
+                    if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
                     {
                         float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                         VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
@@ -67,7 +66,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                                 offer.Active = true;
                                 Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
                             }
-                            if (__instance is PassengerCarAI)
+                            bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                            if (__instance is PassengerCarAI && !isElectric)
                             {
                                 ExtendedTransferManager.Offer offer = default;
                                 offer.Citizen = __instance.GetOwnerID(vehicleID, ref vehicleData).Citizen;
