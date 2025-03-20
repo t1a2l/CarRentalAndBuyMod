@@ -357,5 +357,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return false;
         }
+
     }
 }

@@ -64,10 +64,28 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-        // set the parked car as the toursit rental vehicle
+        [HarmonyBefore(["me.tmpe"])]
+        [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
+        [HarmonyPrefix]
+        public static void ParkVehiclePrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset)
+        {
+            if (VehicleFuelManager.VehicleFuelExist(vehicleID) && vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+            {
+                var citizenId = __instance.GetOwnerID(vehicleID, ref vehicleData).Citizen;
+                ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
+                var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
+                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
+                if (building.Info.GetAI() is GasStationAI)
+                {
+                    UpdatePassengersTempTarget(vehicleID, ref vehicleData, citizenInstance.m_targetBuilding);
+                }
+            }
+        }
+
+
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPostfix]
-        public static void ParkVehicle(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset)
+        public static void ParkVehiclePostfix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset)
         {
             var citizenId = __instance.GetOwnerID(vehicleID, ref vehicleData).Citizen;
             ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
@@ -275,5 +293,33 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             data.m_flags &= ~Vehicle.Flags.Stopped;
         }
 
+        private static void UpdatePassengersTempTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = data.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+                for (int i = 0; i < 5; i++)
+                {
+                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+                    if (citizen != 0)
+                    {
+                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+                        if (instance2 != 0)
+                        {
+                            instance.m_instances.m_buffer[instance2].m_targetBuilding = targetBuilding;
+                        }
+                    }
+                }
+                num = nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+        }
     }
 }
