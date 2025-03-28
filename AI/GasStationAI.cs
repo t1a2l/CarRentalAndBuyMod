@@ -34,9 +34,14 @@ namespace CarRentalAndBuyMod.AI
         [CustomizableProperty("Fuel Capacity")]
         public int m_maxFuelCapacity = 50000;
 
+        [CustomizableProperty("Battery Recharge")]
+        public bool m_allowBatteryRecharge = true;
+
         readonly ExtendedTransferManager.TransferReason m_incomingResource = ExtendedTransferManager.TransferReason.PetroleumProducts;
 
-        readonly ExtendedTransferManager.TransferReason m_outgoingResource = ExtendedTransferManager.TransferReason.FuelVehicle;
+        readonly ExtendedTransferManager.TransferReason m_outgoingResource1 = ExtendedTransferManager.TransferReason.FuelVehicle;
+
+        readonly ExtendedTransferManager.TransferReason m_outgoingResource2 = ExtendedTransferManager.TransferReason.FuelElectricVehicle;
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
         {
@@ -106,7 +111,8 @@ namespace CarRentalAndBuyMod.AI
         {
             string text = base.GetDebugString(buildingID, ref data);
             ExtendedTransferManager.TransferReason incomingResource = m_incomingResource;
-            ExtendedTransferManager.TransferReason outgoingResource = m_outgoingResource;
+            ExtendedTransferManager.TransferReason outgoingResource1 = m_outgoingResource1;
+            ExtendedTransferManager.TransferReason outgoingResource2 = m_outgoingResource2;
             if (incomingResource != ExtendedTransferManager.TransferReason.None)
             {
                 int count = 0;
@@ -116,14 +122,23 @@ namespace CarRentalAndBuyMod.AI
                 ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, incomingResource, ref count, ref cargo, ref capacity, ref outside);
                 text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, incomingResource.ToString(), data.m_customBuffer1, cargo);
             }
-            if (outgoingResource != ExtendedTransferManager.TransferReason.None)
+            if (outgoingResource1 != ExtendedTransferManager.TransferReason.None)
             {
                 int count = 0;
                 int cargo = 0;
                 int capacity = 0;
                 int outside = 0;
-                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource, ref count, ref cargo, ref capacity, ref outside);
-                text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, outgoingResource.ToString(), data.m_customBuffer1, cargo);
+                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource1, ref count, ref cargo, ref capacity, ref outside);
+                text = StringUtils.SafeFormat("{0}\n{1}: {2} (+{3})", text, outgoingResource1.ToString(), data.m_customBuffer1, cargo);
+            }
+            if (m_allowBatteryRecharge && outgoingResource2 != ExtendedTransferManager.TransferReason.None)
+            {
+                int count = 0;
+                int cargo = 0;
+                int capacity = 0;
+                int outside = 0;
+                ExtendedVehicleManager.CalculateGuestVehicles(buildingID, ref data, outgoingResource2, ref count, ref cargo, ref capacity, ref outside);
+                text = StringUtils.SafeFormat("{0}\n{1}: {2}", text, outgoingResource2.ToString(), cargo);
             }
             return text;
         }
@@ -197,7 +212,7 @@ namespace CarRentalAndBuyMod.AI
                 amountDelta = Mathf.Clamp(amountDelta, 0, m_maxFuelCapacity - data.m_customBuffer1);
                 data.m_customBuffer1 += (ushort)amountDelta;
             }
-            if (material == m_outgoingResource)
+            if (material == m_outgoingResource1)
             {
                 amountDelta = Mathf.Clamp(amountDelta, 0, data.m_customBuffer1);
                 data.m_customBuffer1 -= (ushort)amountDelta;
@@ -212,7 +227,14 @@ namespace CarRentalAndBuyMod.AI
             {
                 Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(m_incomingResource, offer);
             }
-            Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource, offer);
+            if (m_outgoingResource1 != ExtendedTransferManager.TransferReason.None)
+            {
+                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource1, offer);
+            }
+            if (m_allowBatteryRecharge && m_outgoingResource2 != ExtendedTransferManager.TransferReason.None)
+            {
+                Singleton<ExtendedTransferManager>.instance.RemoveOutgoingOffer(m_outgoingResource2, offer);
+            }
             base.BuildingDeactivated(buildingID, ref data);
         }
 
@@ -263,8 +285,18 @@ namespace CarRentalAndBuyMod.AI
                         offer.Position = buildingData.m_position;
                         offer.Amount = 1;
                         offer.Active = false;
-                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource, offer);
+                        Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource1, offer);
                     }
+                }
+
+                if(buildingData.m_electricityBuffer > 0)
+                {
+                    ExtendedTransferManager.Offer offer = default;
+                    offer.Building = buildingID;
+                    offer.Position = buildingData.m_position;
+                    offer.Amount = 1;
+                    offer.Active = false;
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(m_outgoingResource2, offer);
                 }
             }
         }

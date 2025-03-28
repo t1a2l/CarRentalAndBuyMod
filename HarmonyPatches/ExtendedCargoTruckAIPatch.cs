@@ -15,7 +15,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPostfix]
         public static void GetLocalizedStatus(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ref InstanceID target, ref string __result)
         {
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle)
             {
                 target = InstanceID.Empty;
                 __result = "Getting fuel";
@@ -44,7 +44,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 return true;
             }
-            if (data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && VehicleFuelManager.VehicleFuelExist(vehicleID))
+            if ((data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle) 
+                && VehicleFuelManager.VehicleFuelExist(vehicleID))
             {
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
@@ -68,7 +69,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
         {
             data.m_flags |= Vehicle.Flags.Stopped;
-            gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
+            bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+            if (!isElectric)
+            {
+                gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
+            }
             data.m_flags &= ~Vehicle.Flags.Stopped;
         }
     }

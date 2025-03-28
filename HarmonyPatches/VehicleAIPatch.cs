@@ -50,7 +50,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
                 {
-                    if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle)
+                    if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && 
+                        vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle)
                     {
                         float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                         VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
@@ -64,17 +65,32 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                                 offer.Position = vehicleData.GetLastFramePosition();
                                 offer.Amount = 1;
                                 offer.Active = true;
-                                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                                if (isElectric)
+                                {
+                                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelElectricVehicle, offer);
+                                }
+                                else
+                                {
+                                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                }
                             }
-                            bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                            if (__instance is PassengerCarAI && !isElectric)
+                            if (__instance is PassengerCarAI)
                             {
                                 ExtendedTransferManager.Offer offer = default;
                                 offer.Citizen = __instance.GetOwnerID(vehicleID, ref vehicleData).Citizen;
                                 offer.Position = vehicleData.GetLastFramePosition();
                                 offer.Amount = 1;
                                 offer.Active = true;
-                                Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                                if(isElectric)
+                                {
+                                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelElectricVehicle, offer);
+                                }
+                                else
+                                {
+                                    Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                }   
                             }
                         }
                     }
