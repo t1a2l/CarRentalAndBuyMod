@@ -293,7 +293,7 @@ namespace CarRentalAndBuyMod.AI
 			StringBuilder stringBuilder = new();
             stringBuilder.Append(string.Format("DealerShip Cars: {0} of {1}", data.m_customBuffer1, m_dealerCarCapacity));
             stringBuilder.Append(Environment.NewLine);
-			return stringBuilder.ToString();
+            return stringBuilder.ToString();
 		}
 
 		public override void GetPollutionAccumulation(out int ground, out int noise)
