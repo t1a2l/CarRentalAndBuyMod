@@ -21,9 +21,6 @@ namespace CarRentalAndBuyMod.AI
 		[CustomizableProperty("Highly Educated Workers", "Workers", 3)]
 		public int m_workPlaceCount3 = 4;
 
-		[CustomizableProperty("Visit place count", "Visitors", 3)]
-		public int m_visitPlaceCount = 10;
-
 		[CustomizableProperty("Noise Accumulation", "Pollution")]
 		public int m_noiseAccumulation = 50;
 
@@ -153,7 +150,7 @@ namespace CarRentalAndBuyMod.AI
 		{
 			base.CreateBuilding(buildingID, ref data);
 			int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
-			Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, m_visitPlaceCount, 0, 0);
+			Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, 0, 0, 0);
 		}
 
         public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
