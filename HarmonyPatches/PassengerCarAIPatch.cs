@@ -24,7 +24,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return true;
             }
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding];
-            if (sourceBuilding.Info.GetAI() is CarRentalAI)
+            if (sourceBuilding.Info.GetAI() is CarRentalAI || sourceBuilding.Info.GetAI() is CarDealerAI)
             {
                 CitizenManager instance = Singleton<CitizenManager>.instance;
                 uint num = vehicleData.m_citizenUnits;
@@ -40,7 +40,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                             ushort instance2 = instance.m_citizens.m_buffer[citizenId].m_instance;
                             var citizen_source_building_id = instance.m_instances.m_buffer[instance2].m_sourceBuilding;
                             var citizen_source_building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizen_source_building_id];
-                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) != 0 && citizen_source_building.Info.GetAI() is CarRentalAI)
+                            if (instance2 != 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) != 0 
+                                && (citizen_source_building.Info.GetAI() is CarRentalAI || citizen_source_building.Info.GetAI() is CarDealerAI))
                             {
                                 __result = false;
                                 return false;
@@ -82,7 +83,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
             }
         }
-
 
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPostfix]

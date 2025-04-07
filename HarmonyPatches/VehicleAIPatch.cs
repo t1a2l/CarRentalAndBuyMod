@@ -86,7 +86,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        public static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
+        private static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
         {
             if (instance is PassengerCarAI && !VehicleFuelManager.VehicleFuelExist(vehicleID))
             {

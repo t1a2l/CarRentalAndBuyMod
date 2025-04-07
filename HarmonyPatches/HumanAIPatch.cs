@@ -25,7 +25,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     // i am here to return the car and leave the city
                     if (rental.CarRentalBuildingID == citizenData.m_targetBuilding && CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
                     {
-                        Debug.Log("CarRentalAndBuyMod: HumanAI - ReturnRentalVehicle");
+                        Debug.Log("CarRentalAndBuyMod: TouristAI - ReturnRentalVehicle");
                         // get original outside connection target
                         var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
                         CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
@@ -41,7 +41,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     if (carRentalAI.m_rentedCarCount < targetBuilding.m_customBuffer1)
                     {
-                        Debug.Log("CarRentalAndBuyMod: HumanAI - RentNewRentalVehicle");
+                        Debug.Log("CarRentalAndBuyMod: TouristAI - RentNewRentalVehicle");
                         VehicleInfo vehicleInfo = VehicleManagerPatch.GetVehicleInfo(ref citizenData); 
                         TouristAIPatch.SpawnRentalVehicle(touristAI, instanceID, ref citizenData, vehicleInfo, default);
                         VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, citizen.m_vehicle, citizenData.m_sourceBuilding);
@@ -55,7 +55,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 if (targetBuilding.m_customBuffer1 > 0)
                 {
-                    Debug.Log("CarRentalAndBuyMod: HumanAI - BuyNewVehicle");
+                    Debug.Log("CarRentalAndBuyMod: ResidentAI - BuyNewVehicle");
                     VehicleInfo vehicleInfo = VehicleManagerPatch.GetVehicleInfo(ref citizenData);
                     ResidentAIPatch.SpawnOwnVehicle(residentAI, instanceID, ref citizenData, vehicleInfo, default);
                     targetBuilding.m_customBuffer1--;
@@ -65,25 +65,5 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return true;
         }
-
-        [HarmonyPatch(typeof(HumanAI), "ArriveAtTarget")]
-        [HarmonyPrefix]
-        public static void ArriveAtTarget(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData)
-        {
-            ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-            var visitBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizen.m_visitBuilding];
-            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-            if (__instance.m_info.GetAI() is TouristAI && visitBuilding.Info.GetAI() is CarRentalAI && targetBuilding.Info.GetAI() is not CarRentalAI)
-            {
-                Debug.Log("CarRentalAndBuyMod: HumanAI - ArrivingAtTargetTouristAI");
-                citizen.m_visitBuilding = citizenData.m_targetBuilding;
-            }
-            else if (__instance.m_info.GetAI() is ResidentAI && visitBuilding.Info.GetAI() is CarDealerAI && targetBuilding.Info.GetAI() is not CarDealerAI)
-            {
-                Debug.Log("CarRentalAndBuyMod: HumanAI - ArrivingAtTargetResidentAI");
-                citizen.m_visitBuilding = citizenData.m_targetBuilding;
-            }
-        }
-
     }
 }

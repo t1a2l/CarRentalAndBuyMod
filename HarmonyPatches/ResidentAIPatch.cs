@@ -4,7 +4,6 @@ using ColossalFramework;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -12,11 +11,48 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     [HarmonyPatch]
     public static class ResidentAIPatch
     {
-        private delegate bool TryJoinVehicleDelegate(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, ushort vehicleID, ref Vehicle vehicleData);
-        private static readonly TryJoinVehicleDelegate TryJoinVehicle = AccessTools.MethodDelegate<TryJoinVehicleDelegate>(typeof(ResidentAI).GetMethod("TryJoinVehicle", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        [HarmonyPatch(typeof(ResidentAI), "SimulationStep", [typeof(ushort), typeof(CitizenInstance), typeof(CitizenInstance.Frame), typeof(bool)],
+            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref, ArgumentType.Normal])]
+        [HarmonyPrefix]
+        public static void SimulationStep(ushort instanceID, ref CitizenInstance citizenData, ref CitizenInstance.Frame frameData, bool lodPhysics)
+        {
+            uint citizen = citizenData.m_citizen;
+            if (citizen != 0)
+            {
+                bool shouldBuyVehicle = false;
+                var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle;
+                if(vehicleId == 0)
+                {
+                    shouldBuyVehicle = Singleton<SimulationManager>.instance.m_randomizer.Int32(32U) == 0;
+                }
+                else
+                {
+                    var vehicleInfo = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleId].Info;
+                    if (vehicleInfo != null && vehicleInfo.GetAI() is not PassengerCarAI)
+                    {
+                        shouldBuyVehicle = Singleton<SimulationManager>.instance.m_randomizer.Int32(32U) == 0;
+                    }
+                }
 
-        private delegate VehicleInfo GetVehicleInfoDelegate(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, out VehicleInfo trailer);
-        private static readonly GetVehicleInfoDelegate GetVehicleInfo = AccessTools.MethodDelegate<GetVehicleInfoDelegate>(typeof(ResidentAI).GetMethod("GetVehicleInfo", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+                if(shouldBuyVehicle && FindCarDealerships(citizenData.m_frame0.m_position))
+                {
+                    if (!CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen) && citizenData.m_targetBuilding != 0)
+                    {
+                        var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+                        if(building.Info.GetAI() is not CarDealerAI)
+                        {
+                            CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
+                        }
+                    }
+                    ExtendedTransferManager.Offer offer = default;
+                    offer.Citizen = citizenData.m_citizen;
+                    offer.Position = citizenData.m_targetPos;
+                    offer.Amount = 1;
+                    offer.Active = true;
+                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.CarBuy, offer);
+                }
+            }
+        }
 
         [HarmonyPatch(typeof(ResidentAI), "SetTarget")]
         [HarmonyPrefix]
@@ -27,21 +63,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
             }
-        }
-
-        [HarmonyBefore(["me.tmpe"])]
-        [HarmonyPatch(typeof(ResidentAI), "GetVehicleInfo")]
-        [HarmonyPrefix]
-        public static bool GetVehicleInfoPrefix(ushort instanceID, ref CitizenInstance citizenData, bool forceProbability, ref VehicleInfo trailer, ref VehicleInfo __result)
-        {
-            CitizenManager instance3 = Singleton<CitizenManager>.instance;
-            ushort parked_vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
-            if(parked_vehicle != 0)
-            {
-                __result = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[parked_vehicle].Info;
-                return false;
-            }
-            return true;
         }
 
         [HarmonyPatch(typeof(ResidentAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
@@ -55,119 +76,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
                 if (targetBuilding.Info.GetAI() is CarDealerAI)
                 {
-                    target = InstanceID.Empty;
-                    __result = "Going to buy a new car";
-                }
-            }
-            else
-            {
-                var visitBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_visitBuilding];
-                if (visitBuilding.Info.GetAI() is CarDealerAI)
-                {
-                    target = InstanceID.Empty;
-                    __result = "Buying a new car";
-                }
-            }
-        }
-
-        [HarmonyPatch(typeof(ResidentAI), "SpawnVehicle")]
-        [HarmonyPrefix]
-        public static bool SpawnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
-        {
-            var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_sourceBuilding];
-            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
-            // if you come from outside from road connection you can spawn a car
-            if (citizenData.m_sourceBuilding != 0 && IsRoadConnection(citizenData.m_sourceBuilding))
-            {
-                return true;
-            }
-            VehicleManager instance = Singleton<VehicleManager>.instance;
-            float num = 20f;
-            int num2 = Mathf.Max((int)((citizenData.m_targetPos.x - num) / 32f + 270f), 0);
-            int num3 = Mathf.Max((int)((citizenData.m_targetPos.z - num) / 32f + 270f), 0);
-            int num4 = Mathf.Min((int)((citizenData.m_targetPos.x + num) / 32f + 270f), 539);
-            int num5 = Mathf.Min((int)((citizenData.m_targetPos.z + num) / 32f + 270f), 539);
-            for (int i = num3; i <= num5; i++)
-            {
-                for (int j = num2; j <= num4; j++)
-                {
-                    ushort num6 = instance.m_vehicleGrid[i * 540 + j];
-                    int num7 = 0;
-                    while (num6 != 0)
+                    var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenID].m_vehicle;
+                    if (vehicleId != 0)
                     {
-                        if (TryJoinVehicle(__instance, instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
-                        {
-                            citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
-                            citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
-                            citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
-                            citizenData.m_waitCounter = 0;
-                            return true;
-                        }
-                        num6 = instance.m_vehicles.m_buffer[num6].m_nextGridVehicle;
-                        if (++num7 > 16384)
-                        {
-                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                            break;
-                        }
+                        target = InstanceID.Empty;
+                        __result = "Going to sell owned car";
+                    }
+                    else
+                    {
+                        target = InstanceID.Empty;
+                        __result = "Going to buy a new car";
                     }
                 }
             }
-
-            NetManager instance2 = Singleton<NetManager>.instance;
-            CitizenManager instance3 = Singleton<CitizenManager>.instance;
-            ushort vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle;
-            ushort parked_vehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
-            VehicleInfo vehicleInfo = GetVehicleInfo(__instance, instanceID, ref citizenData, forceProbability: false, out VehicleInfo trailer);
-            if (vehicleInfo is null || vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Bicycle)
-            {
-                instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
-                if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
-                {
-                    citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
-                    citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
-                    citizenData.m_waitCounter = 0;
-                }
-                __result = true;
-                return false;
-            }
-            if (vehicleInfo.m_class.m_subService == ItemClass.SubService.PublicTransportTaxi)
-            {
-                instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
-                if ((citizenData.m_flags & CitizenInstance.Flags.WaitingTaxi) == 0)
-                {
-                    citizenData.m_flags |= CitizenInstance.Flags.WaitingTaxi;
-                    citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
-                    citizenData.m_waitCounter = 0;
-                }
-                __result = true;
-                return false;
-            }
-
-            if (parked_vehicle != 0)
-            {
-                var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(parked_vehicle);
-                SpawnOwnVehicle(__instance, instanceID, ref citizenData, vehicleInfo, pathPos);
-                Citizen citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-                if(citizen.m_vehicle != 0)
-                {
-                    VehicleFuelManager.CreateVehicleFuel(citizen.m_vehicle, parkedVehicleFuel.CurrentFuelCapacity, parkedVehicleFuel.MaxFuelCapacity, 0);
-                }
-                VehicleFuelManager.RemoveParkedVehicleFuel(parked_vehicle);
-                __result = true;
-                return false;
-            }
-
-
-            if (!IsRoadConnection(citizenData.m_targetBuilding) && FindCarDealerships(citizenData.m_frame0.m_position) && 
-                !CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
-            {
-                CitizenDestinationManager.CreateCitizenDestination(citizenData.m_citizen, citizenData.m_targetBuilding);
-                FindCarDealershipPlace(citizenData.m_citizen, citizenData.m_sourceBuilding, ExtendedTransferManager.TransferReason.CarBuy);
-                __result = false;
-                return false;
-            }
-            __result = false;
-            return false;
         }
 
         public static void SpawnOwnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, VehicleInfo vehicleInfo, PathUnit.Position pathPos)
@@ -268,16 +189,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
-        private static void FindCarDealershipPlace(uint citizenID, ushort sourceBuilding, ExtendedTransferManager.TransferReason reason)
-        {
-            ExtendedTransferManager.Offer offer = default;
-            offer.Citizen = citizenID;
-            offer.Position = Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].m_position;
-            offer.Amount = 1;
-            offer.Active = true;
-            Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(reason, offer);
-        }
-
         private static bool FindCarDealerships(Vector3 pos)
         {
             BuildingManager instance = Singleton<BuildingManager>.instance;
@@ -339,21 +250,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 num2 = Mathf.Max(num2 - 1, 0);
                 num3 = Mathf.Min(num3 + 1, 269);
                 num4 = Mathf.Min(num4 + 1, 269);
-            }
-            return false;
-        }
-
-        private static bool IsRoadConnection(ushort buildingId)
-        {
-            if (buildingId != 0)
-            {
-                BuildingManager instance = Singleton<BuildingManager>.instance;
-                var building = instance.m_buildings.m_buffer[buildingId];
-
-                if (building.Info.GetAI() is OutsideConnectionAI && (building.m_flags & Building.Flags.IncomingOutgoing) != 0 && building.Info.m_class.m_service == ItemClass.Service.Road)
-                {
-                    return true;
-                }
             }
             return false;
         }
