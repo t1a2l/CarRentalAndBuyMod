@@ -121,15 +121,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             var vehicleCreated = instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false);
             if (vehicleCreated && CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
             {
-                var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                if (targeBuildingId != 0)
+                var targetBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
+                if (targetBuildingId != 0)
                 {
                     Debug.Log("CarRentalAndBuyMod: ResidentAI - SpawnBoughtVehicleSpecial");
                     ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
                     data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
                     citizenData.m_sourceBuilding = citizenData.m_targetBuilding;
                     CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-                    __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
+                    __instance.SetTarget(instanceID, ref citizenData, targetBuildingId, false);
                 }
                 else
                 {

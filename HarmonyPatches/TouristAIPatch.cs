@@ -4,7 +4,6 @@ using ColossalFramework;
 using HarmonyLib;
 using MoreTransferReasons;
 using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.HarmonyPatches
@@ -179,15 +178,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             var vehicleCreated = instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false);
             if (vehicleCreated && CitizenDestinationManager.CitizenDestinationExist(citizenData.m_citizen))
             {
-                var targeBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
-                if (targeBuildingId != 0)
+                var targetBuildingId = CitizenDestinationManager.GetCitizenDestination(citizenData.m_citizen);
+                if (targetBuildingId != 0)
                 {
                     Debug.Log("CarRentalAndBuyMod: TouristAI - SpawnRentalVehicleSpecial");
                     ref Vehicle data = ref instance.m_vehicles.m_buffer[vehicle];
                     data.Info.m_vehicleAI.SetSource(vehicle, ref data, citizenData.m_targetBuilding);
                     citizenData.m_sourceBuilding = citizenData.m_targetBuilding;
                     CitizenDestinationManager.RemoveCitizenDestination(citizenData.m_citizen);
-                    __instance.SetTarget(instanceID, ref citizenData, targeBuildingId, false);
+                    __instance.SetTarget(instanceID, ref citizenData, targetBuildingId, false);
                 }
                 else
                 {
@@ -213,7 +212,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     instance.m_vehicles.m_buffer[vehicle].m_targetPos0 = new Vector4(position.x, position.y, position.z, 2f);
                     instance.m_vehicles.m_buffer[vehicle].m_lastPathOffset = lastPathOffset;
                 }
-                
+
                 instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
                 instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
                 instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;

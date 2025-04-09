@@ -18,6 +18,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
             if (VehicleRentalManager.VehicleRentalExist(rentalKey))
             {
+                Debug.Log("CarRentalAndBuyMod: TouristAI - rental despawn");
+
                 VehicleRentalManager.RemoveVehicleRental(rentalKey);
             }
 
