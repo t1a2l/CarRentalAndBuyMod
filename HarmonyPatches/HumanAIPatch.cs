@@ -182,7 +182,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
                 bool usesCar = (laneTypes & (byte)(NetInfo.LaneType.Vehicle | NetInfo.LaneType.TransportVehicle)) != 0 && (vehicleTypes & (ushort)VehicleInfo.VehicleType.Car) != 0;
 
-                if(usesCar)
+                if(usesCar && !IsRoadConnection(instanceData.m_sourceBuilding))
                 {
                     return "fail_soft";
                 }
@@ -191,6 +191,21 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
             return "fail_hard";
+        }
+
+        private static bool IsRoadConnection(ushort buildingId)
+        {
+            if (buildingId != 0)
+            {
+                BuildingManager instance = Singleton<BuildingManager>.instance;
+                var building = instance.m_buildings.m_buffer[buildingId];
+
+                if (building.Info.GetAI() is OutsideConnectionAI && (building.m_flags & Building.Flags.IncomingOutgoing) != 0 && building.Info.m_class.m_service == ItemClass.Service.Road)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }
