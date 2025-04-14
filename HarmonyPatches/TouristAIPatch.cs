@@ -36,6 +36,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     }
                 }
 
+                if(citizenInstance.m_targetBuilding != 0 && IsRoadConnection(citizenInstance.m_targetBuilding))
+                {
+                    shouldRentVehicle = false;
+                }
+
                 if (shouldRentVehicle && FindCarRentals(citizenInstance.m_frame0.m_position))
                 {
                     if (!CitizenDestinationManager.CitizenDestinationExist(citizenID) && citizenInstance.m_targetBuilding != 0)
@@ -58,29 +63,23 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(TouristAI), "SetTarget")]
         [HarmonyPrefix]
-        public static void SetTargetPrefix(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
+        public static bool SetTargetPrefix(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
             var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
             if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.VehicleFuelExist(vehicleId))
             {
                 VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
             }
-        }
-
-        [HarmonyPatch(typeof(TouristAI), "SetTarget")]
-        [HarmonyPostfix]
-        public static void SetTargetPostfix(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
-        {
-            if (data.m_targetBuilding != 0 && IsRoadConnection(data.m_targetBuilding))
+            if(VehicleRentalManager.VehicleRentalExist(data.m_citizen) && targetIndex != 0 && IsRoadConnection(targetIndex) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
             {
-                if (VehicleRentalManager.VehicleRentalExist(data.m_citizen) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
-                {
-                    Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
-                    CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, data.m_targetBuilding);
-                    var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
-                    __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
-                }
+                Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
+                CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, targetIndex);
+                var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
+                return false;
             }
+            return true;
+
         }
 
         [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],

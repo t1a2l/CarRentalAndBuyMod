@@ -11,7 +11,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     public static class HumanAIPatch
     {
         private delegate void SimulationStepCitizenAIDelegate(CitizenAI instance, ushort instanceID, ref CitizenInstance data, Vector3 physicsLodRefPos);
-        private static readonly SimulationStepCitizenAIDelegate SimulationStepCitizenAI = AccessTools.MethodDelegate<SimulationStepCitizenAIDelegate>(typeof(CitizenAI).GetMethod("SimulationStep", BindingFlags.Instance | BindingFlags.Public, null, [typeof(ushort), typeof(CitizenInstance).MakeByRefType(), typeof(Vector3)], null), null, true);
+        private static readonly SimulationStepCitizenAIDelegate SimulationStepCitizenAI = AccessTools.MethodDelegate<SimulationStepCitizenAIDelegate>(typeof(CitizenAI).GetMethod("SimulationStep", BindingFlags.Instance | BindingFlags.Public, null, [typeof(ushort), typeof(CitizenInstance).MakeByRefType(), typeof(Vector3)], null), null, false);
 
         private delegate void SpawnHumanAIDelegate(HumanAI instance, ushort instanceID, ref CitizenInstance data);
         private static readonly SpawnHumanAIDelegate SpawnHumanAI = AccessTools.MethodDelegate<SpawnHumanAIDelegate>(typeof(HumanAI).GetMethod("Spawn", BindingFlags.Instance | BindingFlags.NonPublic), null, true);
@@ -142,7 +142,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
             }
 
-            if (state != "ready")
+            if (state == "fail_soft")
             {
                 return false;
             }
