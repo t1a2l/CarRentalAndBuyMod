@@ -290,9 +290,9 @@ namespace CarRentalAndBuyMod.AI
 		{
 			StringBuilder stringBuilder = new();
             m_rentedCarCount = VehicleRentalManager.VehicleRentals.Where(z => z.Value.CarRentalBuildingID == buildingID).Count();
-            stringBuilder.Append(string.Format("This car rental can hold: {0} cars", m_rentalCarCapacity));
+            stringBuilder.Append(string.Format("This car rental can hold: {0} cars in total", m_rentalCarCapacity));
             stringBuilder.Append(Environment.NewLine);
-            stringBuilder.Append(string.Format("Cars available for rent: {0} of {1}", m_rentedCarCount, data.m_customBuffer1));
+            stringBuilder.Append(string.Format("Number of rented cars: {0} of {1}", m_rentedCarCount, data.m_customBuffer1));
             stringBuilder.Append(Environment.NewLine);
 			return stringBuilder.ToString();
 		}
