@@ -1,4 +1,6 @@
-﻿using ColossalFramework;
+﻿using CarRentalAndBuyMod.AI;
+using CarRentalAndBuyMod.Managers;
+using ColossalFramework;
 using HarmonyLib;
 using UnityEngine;
 
@@ -36,8 +38,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 else
                 {
-                    if((vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Car && 
-                        (instance2.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle != 0 || IsRoadConnection(citizenData.m_sourceBuilding))) || 
+                    if ((vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Car &&
+                        (instance2.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle != 0 || HumanAIPatch.IsRoadConnection(citizenData.m_sourceBuilding))) ||
                         vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Bicycle)
                     {
                         laneType |= NetInfo.LaneType.Vehicle;
@@ -53,6 +55,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         else if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].Info.m_class.m_service > ItemClass.Service.Office)
                         {
                             randomParking = true;
+                        }
+                        if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding].Info.GetAI() is CarRentalAI)
+                        {
+                            randomParking = false;
                         }
                     }
                     if (vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Car)
@@ -110,19 +116,28 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        private static bool IsRoadConnection(ushort buildingId)
+        [HarmonyPatch(typeof(CitizenAI), "FindPathPosition")]
+        [HarmonyPrefix]
+        public static void PatchFindPathPosition(ushort instanceID, ref CitizenInstance citizenData, Vector3 pos, ref NetInfo.LaneType laneTypes, ref VehicleInfo.VehicleType vehicleTypes, ref VehicleInfo.VehicleCategory vehicleCategories, bool allowUnderground, ref PathUnit.Position position)
         {
-            if (buildingId != 0)
+            var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
+            var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
+            if (citizenData.Info.GetAI() is TouristAI && targetBuilding.Info.GetAI() is CarRentalAI && VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
             {
-                BuildingManager instance = Singleton<BuildingManager>.instance;
-                var building = instance.m_buildings.m_buffer[buildingId];
-
-                if (building.Info.GetAI() is OutsideConnectionAI && (building.m_flags & Building.Flags.IncomingOutgoing) != 0 && building.Info.m_class.m_service == ItemClass.Service.Road)
+                laneTypes |= NetInfo.LaneType.Vehicle;
+                vehicleTypes |= VehicleInfo.VehicleType.Car;
+                vehicleCategories |= VehicleInfo.VehicleCategory.PassengerCar;
+            }
+            else if (citizenData.Info.GetAI() is ResidentAI && targetBuilding.Info.GetAI() is CarDealerAI && (citizen.m_vehicle != 0 || citizen.m_parkedVehicle != 0))
+            {
+                if(citizen.m_vehicle != 0 && Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle].Info.GetAI() is PassengerCarAI ||
+                   citizen.m_parkedVehicle != 0 && Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[citizen.m_parkedVehicle].Info.GetAI() is PassengerCarAI)
                 {
-                    return true;
+                    laneTypes |= NetInfo.LaneType.Vehicle;
+                    vehicleTypes |= VehicleInfo.VehicleType.Car;
+                    vehicleCategories |= VehicleInfo.VehicleCategory.PassengerCar;
                 }
             }
-            return false;
         }
     }
 }
