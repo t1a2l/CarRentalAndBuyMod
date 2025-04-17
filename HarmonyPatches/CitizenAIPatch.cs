@@ -118,7 +118,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(CitizenAI), "FindPathPosition")]
         [HarmonyPrefix]
-        public static void PatchFindPathPosition(ushort instanceID, ref CitizenInstance citizenData, Vector3 pos, ref NetInfo.LaneType laneTypes, ref VehicleInfo.VehicleType vehicleTypes, ref VehicleInfo.VehicleCategory vehicleCategories, bool allowUnderground, ref PathUnit.Position position)
+        public static void FindPathPosition(ushort instanceID, ref CitizenInstance citizenData, Vector3 pos, ref NetInfo.LaneType laneTypes, ref VehicleInfo.VehicleType vehicleTypes, ref VehicleInfo.VehicleCategory vehicleCategories, bool allowUnderground, ref PathUnit.Position position)
         {
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
