@@ -132,7 +132,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 if (targetBuilding.Info.GetAI() is CarDealerAI)
                 {
                     var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenID].m_vehicle;
-                    if(vehicleId != 0)
+                    var parkedVehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenID].m_parkedVehicle;
+                    if (vehicleId != 0 || parkedVehicleId != 0)
                     {
                         target = InstanceID.Empty;
                         __result = "Going to return rented car";
