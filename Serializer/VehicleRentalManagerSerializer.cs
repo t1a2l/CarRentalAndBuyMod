@@ -1,5 +1,6 @@
 ﻿using System;
 using CarRentalAndBuyMod.Managers;
+using ColossalFramework;
 using UnityEngine;
 
 namespace CarRentalAndBuyMod.Serializer
@@ -10,7 +11,7 @@ namespace CarRentalAndBuyMod.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_RENTAL_MANAGER_DATA_VERSION = 1;
+        private const ushort iVEHICLE_RENTAL_MANAGER_DATA_VERSION = 2;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -30,6 +31,7 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteUInt32(kvp.Key, Data);
                 StorageData.WriteUInt16(kvp.Value.RentedVehicleID, Data);
                 StorageData.WriteUInt16(kvp.Value.CarRentalBuildingID, Data);
+                StorageData.WriteBool(kvp.Value.IsParked, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -58,6 +60,23 @@ namespace CarRentalAndBuyMod.Serializer
                         RentedVehicleID = rentedVehicleID,
                         CarRentalBuildingID = carRentalBuildingID
                     };
+
+                    if(iVehicleRentalManagerVersion == 1)
+                    {
+                        if (Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_parkedVehicle != 0)
+                        {
+                            rental.IsParked = true;
+                        }
+                        else
+                        {
+                            rental.IsParked = false;
+                        }
+                    }
+                    else
+                    {
+                        bool isParked = StorageData.ReadBool(Data, ref iIndex);
+                        rental.IsParked = isParked;
+                    }
 
                     VehicleRentalManager.VehicleRentals.Add(citizenId, rental);
 

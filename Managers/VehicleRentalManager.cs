@@ -10,6 +10,7 @@ namespace CarRentalAndBuyMod.Managers
         {
             public ushort RentedVehicleID;
             public ushort CarRentalBuildingID;
+            public bool IsParked;
         }
 
         public static void Init()
@@ -19,12 +20,14 @@ namespace CarRentalAndBuyMod.Managers
 
         public static void Deinit() => VehicleRentals = [];
 
-        public static Rental GetVehicleRental(uint citizenId)
+        public static Rental GetRentalData(uint citizenId)
         {
             return VehicleRentals.TryGetValue(citizenId, out var rental) ? rental : default;
         }
 
-        public static Rental CreateVehicleRental(uint citizenId, ushort rentedVehicleID, ushort carRentalBuildingID)
+        public static bool RentalDataExist(uint citizenId) => VehicleRentals.ContainsKey(citizenId);
+
+        public static Rental CreateRentalData(uint citizenId, ushort rentedVehicleID, ushort carRentalBuildingID)
         {
             var rental = new Rental()
             {
@@ -36,9 +39,7 @@ namespace CarRentalAndBuyMod.Managers
             return rental;
         }
 
-        public static bool VehicleRentalExist(uint citizenId) => VehicleRentals.ContainsKey(citizenId);
-
-        public static void SetVehicleRental(uint citizenId, Rental rental)
+        public static void SetRentalData(uint citizenId, Rental rental)
         {
             if (VehicleRentals.TryGetValue(citizenId, out var _))
             {
@@ -46,7 +47,7 @@ namespace CarRentalAndBuyMod.Managers
             }
         }
 
-        public static void RemoveVehicleRental(uint citizenId)
+        public static void RemoveRentalData(uint citizenId)
         {
             if (VehicleRentals.TryGetValue(citizenId, out var _))
             {
