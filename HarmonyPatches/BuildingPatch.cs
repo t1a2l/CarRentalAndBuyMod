@@ -12,11 +12,11 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static bool RemoveSourceCitizen(ushort instanceID, ref CitizenInstance data)
         {
-            if(!VehicleRentalManager.VehicleRentalExist(data.m_citizen))
+            if(!VehicleRentalManager.RentalDataExist(data.m_citizen))
             {
                 return true;
             }
-            var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+            var rental = VehicleRentalManager.GetRentalData(data.m_citizen);
             var sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
             if (sourceBuilding.Info.GetAI() is CarRentalAI && rental.CarRentalBuildingID == data.m_sourceBuilding)
             {

@@ -29,16 +29,16 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void SimulationStep(VehicleAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics)
         {
-            if (VehicleFuelManager.VehicleFuelExist(vehicleID))
+            if (VehicleFuelManager.FuelDataExist(vehicleID))
             {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
                 {
                     if (vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelVehicle && 
                         vehicleData.m_custom != (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle)
                     {
                         float percent = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                        VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
+                        VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, 0);
                         bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
                         if ((percent > 0.2 && percent < 0.8 && shouldFuel) || percent <= 0.2)
                         {
@@ -81,22 +81,22 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 }
                 if (vehicleFuel.CurrentFuelCapacity > 0)
                 {
-                    VehicleFuelManager.SetVehicleFuel(vehicleID, -0.01f);
+                    VehicleFuelManager.SetCurrentFuelCapacity(vehicleID, -0.01f);
                 }
             }
         }
 
         private static void CreateFuelForVehicle(VehicleAI instance, ushort vehicleID, ref Vehicle data)
         {
-            if (instance is PassengerCarAI && !VehicleFuelManager.VehicleFuelExist(vehicleID))
+            if (instance is PassengerCarAI && !VehicleFuelManager.FuelDataExist(vehicleID))
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(30, 60);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 60, 0);
+                VehicleFuelManager.CreateFuelData(vehicleID, randomFuelCapacity, 60, 0, false);
             }
-            if (instance is ExtendedCargoTruckAI && !VehicleFuelManager.VehicleFuelExist(vehicleID))
+            if (instance is ExtendedCargoTruckAI && !VehicleFuelManager.FuelDataExist(vehicleID))
             {
                 int randomFuelCapacity = Singleton<SimulationManager>.instance.m_randomizer.Int32(50, 80);
-                VehicleFuelManager.CreateVehicleFuel(vehicleID, randomFuelCapacity, 80, 0);
+                VehicleFuelManager.CreateFuelData(vehicleID, randomFuelCapacity, 80, 0, false);
             }
         }
 

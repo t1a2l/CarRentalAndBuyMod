@@ -26,12 +26,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void SetTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
-            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI() is GasStationAI && VehicleFuelManager.VehicleFuelExist(vehicleID))
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI() is GasStationAI && VehicleFuelManager.FuelDataExist(vehicleID))
             {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
                 if (vehicleFuel.OriginalTargetBuilding == 0 && data.m_targetBuilding != 0)
                 {
-                    VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, data.m_targetBuilding);
+                    VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, data.m_targetBuilding);
                 }
             }
         }
@@ -45,19 +45,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 return true;
             }
             if ((data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || data.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle) 
-                && VehicleFuelManager.VehicleFuelExist(vehicleID))
+                && VehicleFuelManager.FuelDataExist(vehicleID))
             {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(vehicleID);
+                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
                 ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding];
                 var distance = Vector3.Distance(data.GetLastFramePosition(), building.m_position);
                 if (building.Info.GetAI() is GasStationAI gasStationAI && distance < 80f)
                 {
                     var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
-                    VehicleFuelManager.SetVehicleFuel(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
+                    VehicleFuelManager.SetCurrentFuelCapacity(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
                     var targetBuilding = vehicleFuel.OriginalTargetBuilding;
-                    VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleID, 0);
+                    VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, 0);
                     __instance.SetTarget(vehicleID, ref data, targetBuilding);
                     __result = false;
                     return false;

@@ -122,7 +122,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             var targetBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             var citizen = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen];
-            if (citizenData.Info.GetAI() is TouristAI && targetBuilding.Info.GetAI() is CarRentalAI && VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
+            if (citizenData.Info.GetAI() is TouristAI && targetBuilding.Info.GetAI() is CarRentalAI && VehicleRentalManager.RentalDataExist(citizenData.m_citizen))
             {
                 laneTypes |= NetInfo.LaneType.Vehicle;
                 vehicleTypes |= VehicleInfo.VehicleType.Car;
