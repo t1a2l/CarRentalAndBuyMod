@@ -12,38 +12,16 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     {
         [HarmonyPatch(typeof(VehicleManager), "ReleaseVehicle")]
         [HarmonyPrefix]
-        public static void ReleaseVehicle(ushort vehicle)
+        public static void ReleaseVehicle(ushort vehicleId)
         {
-            var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(z => z.Value.RentedVehicleID == vehicle).Key;
-
-            if (VehicleRentalManager.VehicleRentalExist(rentalKey))
-            {
-                Debug.Log("CarRentalAndBuyMod: TouristAI - rental despawn");
-
-                VehicleRentalManager.RemoveVehicleRental(rentalKey);
-            }
-
-            if (VehicleFuelManager.VehicleFuelExist(vehicle))
-            {
-                VehicleFuelManager.RemoveVehicleFuel(vehicle);
-            }
+            VehicleRemoved(vehicleId);
         }
 
         [HarmonyPatch(typeof(VehicleManager), "ReleaseParkedVehicle")]
         [HarmonyPrefix]
-        public static void ReleaseParkedVehicle(ushort parked)
+        public static void ReleaseParkedVehicle(ushort parkedVehicleId)
         {
-            var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(z => z.Value.RentedVehicleID == parked).Key;
-
-            if (VehicleRentalManager.VehicleRentalExist(rentalKey))
-            {
-                VehicleRentalManager.RemoveVehicleRental(rentalKey);
-            }
-
-            if (VehicleFuelManager.ParkedVehicleFuelExist(parked))
-            {
-                VehicleFuelManager.RemoveParkedVehicleFuel(parked);
-            }
+            VehicleRemoved(parkedVehicleId);
         }
 
         public static VehicleInfo GetVehicleInfo(ref CitizenInstance citizenData)
@@ -110,6 +88,22 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             return Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref r, service, subService, level);
         }
+
+        private static void VehicleRemoved(ushort VehicleId)
+        {
+            var rentalKey = VehicleRentalManager.VehicleRentals.FirstOrDefault(z => z.Value.RentedVehicleID == VehicleId).Key;
+
+            if (VehicleRentalManager.RentalDataExist(rentalKey))
+            {
+                VehicleRentalManager.RemoveRentalData(rentalKey);
+            }
+
+            if (VehicleFuelManager.FuelDataExist(VehicleId))
+            {
+                VehicleFuelManager.RemoveFuelData(VehicleId);
+            }
+        }
+
 
         private static int GetCarProbability(Vector3 position)
         {
