@@ -342,7 +342,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     if (VehicleRentalManager.RentalDataExist(citizenData.m_citizen))
                     {
-                        Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalDrivingVehicle");
+                        Debug.Log("CarRentalAndBuyMod: HumanAI - SetRentalDrivingVehicle");
                         var rental = VehicleRentalManager.GetRentalData(citizenData.m_citizen);
                         rental.RentedVehicleID = vehicle;
                         rental.IsParked = false;
@@ -350,6 +350,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     }
                     if (VehicleFuelManager.FuelDataExist(parkedVehicle))
                     {
+                        Debug.Log("CarRentalAndBuyMod: HumanAI - UpateFuelDataToDrivingVehicle");
                         VehicleFuelManager.UpdateParkingMode(parkedVehicle, vehicle, false);
                     }
                 }
