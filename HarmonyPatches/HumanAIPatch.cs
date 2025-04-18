@@ -46,9 +46,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 if (Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle != 0)
                 {
                     Debug.Log("CarRentalAndBuyMod: ReturnRentedVehicle Or SellOwnVehicle");
-                    if (VehicleRentalManager.VehicleRentalExist(citizenData.m_citizen))
+                    if (VehicleRentalManager.RentalDataExist(citizenData.m_citizen))
                     {
-                        VehicleRentalManager.RemoveVehicleRental(citizenData.m_citizen);
+                        VehicleRentalManager.RemoveRentalData(citizenData.m_citizen);
                     }
                     Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, 0, 0u);
                     Singleton<VehicleManager>.instance.m_vehicles.m_buffer[citizen.m_vehicle].Unspawn(citizen.m_vehicle);
@@ -58,13 +58,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     if (targetBuilding.Info.GetAI() is CarRentalAI carRentalAI && targetBuilding.m_customBuffer1 - carRentalAI.m_rentedCarCount > 0)
                     {
                         Debug.Log("CarRentalAndBuyMod: RentNewVehicle");
-                        SpawnVehicle(__instance, instanceID, ref citizenData, default);
+                        SpawnVehicleFromShop(__instance, instanceID, ref citizenData, default);
                         carRentalAI.m_rentedCarCount++;
                     }
                     else if (targetBuilding.Info.GetAI() is CarDealerAI && targetBuilding.m_customBuffer1 > 0)
                     {
                         Debug.Log("CarRentalAndBuyMod: BuyNewVehicle");
-                        SpawnVehicle(__instance, instanceID, ref citizenData, default);
+                        SpawnVehicleFromShop(__instance, instanceID, ref citizenData, default);
                         targetBuilding.m_customBuffer1--;
                     }
                 }
@@ -257,6 +257,199 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
+        public static bool SpawnVehicle(ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
+        {
+            VehicleManager instance = Singleton<VehicleManager>.instance;
+            float num = 20f;
+            int num2 = Mathf.Max((int)((citizenData.m_targetPos.x - num) / 32f + 270f), 0);
+            int num3 = Mathf.Max((int)((citizenData.m_targetPos.z - num) / 32f + 270f), 0);
+            int num4 = Mathf.Min((int)((citizenData.m_targetPos.x + num) / 32f + 270f), 539);
+            int num5 = Mathf.Min((int)((citizenData.m_targetPos.z + num) / 32f + 270f), 539);
+            for (int i = num3; i <= num5; i++)
+            {
+                for (int j = num2; j <= num4; j++)
+                {
+                    ushort num6 = instance.m_vehicleGrid[i * 540 + j];
+                    int num7 = 0;
+                    while (num6 != 0)
+                    {
+                        if (HumanAIPatch.TryJoinVehicle(instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
+                        {
+                            citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
+                            citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
+                            citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                            citizenData.m_waitCounter = 0;
+                            return true;
+                        }
+                        num6 = instance.m_vehicles.m_buffer[num6].m_nextGridVehicle;
+                        if (++num7 > 16384)
+                        {
+                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                            break;
+                        }
+                    }
+                }
+            }
+            NetManager instance2 = Singleton<NetManager>.instance;
+            CitizenManager instance3 = Singleton<CitizenManager>.instance;
+            Vector3 vector = Vector3.zero;
+            Quaternion rotation = Quaternion.identity;
+            ushort num8 = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
+            if (num8 != 0)
+            {
+                vector = instance.m_parkedVehicles.m_buffer[num8].m_position;
+                rotation = instance.m_parkedVehicles.m_buffer[num8].m_rotation;
+            }
+            VehicleInfo vehicleInfo = VehicleManagerPatch.GetVehicleInfo(ref citizenData);
+            if (vehicleInfo == null || vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Bicycle)
+            {
+                if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
+                {
+                    citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
+                    citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                    citizenData.m_waitCounter = 0;
+                }
+                return true;
+            }
+            if (vehicleInfo.m_class.m_subService == ItemClass.SubService.PublicTransportTaxi)
+            {
+                if ((citizenData.m_flags & CitizenInstance.Flags.WaitingTaxi) == 0 && instance2.m_segments.m_buffer[pathPos.m_segment].Info.m_hasPedestrianLanes)
+                {
+                    citizenData.m_flags |= CitizenInstance.Flags.WaitingTaxi;
+                    citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                    citizenData.m_waitCounter = 0;
+                }
+                return true;
+            }
+            uint laneID = PathManager.GetLaneID(pathPos);
+            Vector3 vector2 = citizenData.m_targetPos;
+            if (num8 != 0 && Vector3.SqrMagnitude(vector - vector2) < 1024f)
+            {
+                vector2 = vector;
+            }
+            else
+            {
+                num8 = 0;
+            }
+            instance2.m_lanes.m_buffer[laneID].GetClosestPosition(vector2, out var position, out var laneOffset);
+            byte lastPathOffset = (byte)Mathf.Clamp(Mathf.RoundToInt(laneOffset * 255f), 0, 255);
+            position = vector2 + Vector3.ClampMagnitude(position - vector2, 5f);
+            if (instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, vector2, TransferManager.TransferReason.None, transferToSource: false, transferToTarget: false))
+            {
+                var parkedVehicle = instance3.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle;
+
+                if (parkedVehicle != 0 && VehicleRentalManager.RentalDataExist(citizenData.m_citizen))
+                {
+                    if (VehicleRentalManager.RentalDataExist(citizenData.m_citizen))
+                    {
+                        Debug.Log("CarRentalAndBuyMod: PassengerCarAI - SetRentalDrivingVehicle");
+                        var rental = VehicleRentalManager.GetRentalData(citizenData.m_citizen);
+                        rental.RentedVehicleID = vehicle;
+                        rental.IsParked = false;
+                        VehicleRentalManager.SetRentalData(citizenData.m_citizen, rental);
+                    }
+                    if (VehicleFuelManager.FuelDataExist(parkedVehicle))
+                    {
+                        VehicleFuelManager.UpdateParkingMode(parkedVehicle, vehicle, false);
+                    }
+                }
+                Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
+                if (num8 != 0)
+                {
+                    frameData.m_rotation = rotation;
+                }
+                else
+                {
+                    Vector3 forward = position - citizenData.GetLastFrameData().m_position;
+                    if (forward.sqrMagnitude > 0.01f)
+                    {
+                        frameData.m_rotation = Quaternion.LookRotation(forward);
+                    }
+                }
+                instance.m_vehicles.m_buffer[vehicle].m_frame0 = frameData;
+                instance.m_vehicles.m_buffer[vehicle].m_frame1 = frameData;
+                instance.m_vehicles.m_buffer[vehicle].m_frame2 = frameData;
+                instance.m_vehicles.m_buffer[vehicle].m_frame3 = frameData;
+                vehicleInfo.m_vehicleAI.FrameDataUpdated(vehicle, ref instance.m_vehicles.m_buffer[vehicle], ref frameData);
+                instance.m_vehicles.m_buffer[vehicle].m_targetPos0 = new Vector4(position.x, position.y, position.z, 2f);
+                instance.m_vehicles.m_buffer[vehicle].m_flags |= Vehicle.Flags.Stopped;
+                instance.m_vehicles.m_buffer[vehicle].m_path = citizenData.m_path;
+                instance.m_vehicles.m_buffer[vehicle].m_pathPositionIndex = citizenData.m_pathPositionIndex;
+                instance.m_vehicles.m_buffer[vehicle].m_lastPathOffset = lastPathOffset;
+                instance.m_vehicles.m_buffer[vehicle].m_transferSize = (ushort)(citizenData.m_citizen & 0xFFFF);
+                vehicleInfo.m_vehicleAI.TrySpawn(vehicle, ref instance.m_vehicles.m_buffer[vehicle]);
+                if (num8 != 0)
+                {
+                    InstanceID empty = InstanceID.Empty;
+                    empty.ParkedVehicle = num8;
+                    InstanceID empty2 = InstanceID.Empty;
+                    empty2.Vehicle = vehicle;
+                    Singleton<InstanceManager>.instance.ChangeInstance(empty, empty2);
+                }
+                citizenData.m_path = 0u;
+                instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
+                instance3.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, vehicle, 0u);
+                citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                citizenData.m_waitCounter = 0;
+                return true;
+            }
+            instance3.m_citizens.m_buffer[citizenData.m_citizen].SetParkedVehicle(citizenData.m_citizen, 0);
+            if ((citizenData.m_flags & CitizenInstance.Flags.TryingSpawnVehicle) == 0)
+            {
+                citizenData.m_flags |= CitizenInstance.Flags.TryingSpawnVehicle;
+                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                citizenData.m_waitCounter = 0;
+            }
+            return true;
+        }
+
+        public static bool TryJoinVehicle(ushort instanceID, ref CitizenInstance citizenData, ushort vehicleID, ref Vehicle vehicleData)
+        {
+            if ((vehicleData.m_flags & Vehicle.Flags.Stopped) == 0)
+            {
+                return false;
+            }
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = vehicleData.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+                for (int i = 0; i < 5; i++)
+                {
+                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+                    if (citizen != 0)
+                    {
+                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+                        if (instance2 != 0 && instance.m_instances.m_buffer[instance2].m_targetBuilding == citizenData.m_targetBuilding && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.TargetIsNode) == (citizenData.m_flags & CitizenInstance.Flags.TargetIsNode))
+                        {
+                            instance.m_citizens.m_buffer[citizenData.m_citizen].SetVehicle(citizenData.m_citizen, vehicleID, 0u);
+                            if (instance.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle == vehicleID)
+                            {
+                                if (citizenData.m_path != 0)
+                                {
+                                    Singleton<PathManager>.instance.ReleasePath(citizenData.m_path);
+                                    citizenData.m_path = 0u;
+                                }
+                                return true;
+                            }
+                            break;
+                        }
+                        break;
+                    }
+                }
+                num = nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+            return false;
+        }
+
         private static string OnCitizenPathFindSuccess(ushort instanceId, ref CitizenInstance instanceData, ref Citizen citizenData)
         {
             if (citizenData.m_vehicle == 0)
@@ -277,7 +470,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return "fail_hard";
         }
 
-        private static void SpawnVehicle(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
+        private static void SpawnVehicleFromShop(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
         {
             var original_sourceBuilding = Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenData.m_targetBuilding];
             VehicleManager instance = Singleton<VehicleManager>.instance;
@@ -294,7 +487,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 if(__instance is TouristAI)
                 {
-                    VehicleRentalManager.CreateVehicleRental(citizenData.m_citizen, vehicle, citizenData.m_targetBuilding);
+                    VehicleRentalManager.CreateRentalData(citizenData.m_citizen, vehicle, citizenData.m_targetBuilding);
                 }
                 Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
                 Vector3 forward = position - citizenData.GetLastFrameData().m_position;

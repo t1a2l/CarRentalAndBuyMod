@@ -65,15 +65,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static bool SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
             var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
-            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.VehicleFuelExist(vehicleId))
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.FuelDataExist(vehicleId))
             {
-                VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
+                VehicleFuelManager.SetOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
             }
-            if(VehicleRentalManager.VehicleRentalExist(data.m_citizen) && targetIndex != 0 && HumanAIPatch.IsRoadConnection(targetIndex) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
+            if(VehicleRentalManager.RentalDataExist(data.m_citizen) && targetIndex != 0 && HumanAIPatch.IsRoadConnection(targetIndex) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
             {
                 Debug.Log("CarRentalAndBuyMod: TouristAI - SetTargetRoadConnection");
                 CitizenDestinationManager.CreateCitizenDestination(data.m_citizen, targetIndex);
-                var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                var rental = VehicleRentalManager.GetRentalData(data.m_citizen);
                 __instance.SetTarget(instanceID, ref data, rental.CarRentalBuildingID);
                 return false;
             }
@@ -102,9 +102,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Chosen_Building = WorldInfoPanel.GetCurrentInstanceID().Building;
                 }
 
-                if (VehicleRentalManager.VehicleRentalExist(data.m_citizen))
+                if (VehicleRentalManager.RentalDataExist(data.m_citizen))
                 {
-                    var rental = VehicleRentalManager.GetVehicleRental(data.m_citizen);
+                    var rental = VehicleRentalManager.GetRentalData(data.m_citizen);
                     if (rental.CarRentalBuildingID == Chosen_Building)
                     {
                         __result = Color.yellow;
@@ -118,6 +118,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
 
             return true;
+        }
+
+        [HarmonyPatch(typeof(TouristAI), "SpawnVehicle")]
+        [HarmonyPrefix]
+        public static bool SpawnVehicle(ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
+        {
+            __result = HumanAIPatch.SpawnVehicle(instanceID, ref citizenData, pathPos);
+            return false;
         }
 
         [HarmonyPatch(typeof(TouristAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],

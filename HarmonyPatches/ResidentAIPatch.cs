@@ -71,10 +71,18 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static void SetTarget(ResidentAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
             var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
-            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.VehicleFuelExist(vehicleId))
+            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.FuelDataExist(vehicleId))
             {
-                VehicleFuelManager.SetVehicleFuelOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
+                VehicleFuelManager.SetOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
             }
+        }
+
+        [HarmonyPatch(typeof(ResidentAI), "SpawnVehicle")]
+        [HarmonyPrefix]
+        public static bool SpawnVehicle(ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
+        {
+            __result = HumanAIPatch.SpawnVehicle(instanceID, ref citizenData, pathPos);
+            return false;
         }
 
         [HarmonyPatch(typeof(ResidentAI), "GetLocalizedStatus", [typeof(uint), typeof(Citizen), typeof(InstanceID)],
