@@ -156,6 +156,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
                     }
                 }
+                else
+                {
+                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
+                }
 
                 return false;
             }
@@ -197,6 +201,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     {
                         __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
                     }
+                }
+                else
+                {
+                    __result = Singleton<InfoManager>.instance.m_properties.m_neutralColor;
                 }
 
                 return false;
