@@ -19,12 +19,28 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 panel.height = 290;
             }
-            if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && Type != null && VehicleFuelManager.VehicleFuelExist(___m_InstanceID.Vehicle))
+            if(Type == null)
             {
-                var info = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.Vehicle);
+                return;
+            }
+            ushort vehicleId = 0;
+            VehicleInfo vehicleInfo = null;
+            if(___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.Vehicle))
+            {
+                vehicleId = ___m_InstanceID.Vehicle;
+                vehicleInfo = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
+            }
+            if(___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.ParkedVehicle))
+            {
+                vehicleId = ___m_InstanceID.ParkedVehicle;
+                vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
+            }
+
+            if (vehicleId != 0 && vehicleInfo != null)
+            {
+                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleId);
                 double value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
-                bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                bool isElectric = vehicleInfo.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                 Type.text += Environment.NewLine;
                 Type.parent.height = 35;
                 if (isElectric)
@@ -36,26 +52,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     Type.text += "Fuel Percent:  " + value.ToString("#0%");
                 }
             }
-            else if (___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && Type != null)
-            {
-                if (VehicleFuelManager.ParkedVehicleFuelExist(___m_InstanceID.ParkedVehicle))
-                {
-                    var parkedVehicleFuel = VehicleFuelManager.GetParkedVehicleFuel(___m_InstanceID.ParkedVehicle);
-                    float value = parkedVehicleFuel.CurrentFuelCapacity / parkedVehicleFuel.MaxFuelCapacity;
-                    var info = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
-                    bool isElectric = info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                    Type.text += Environment.NewLine;
-                    Type.parent.height = 35;
-                    if (isElectric)
-                    {
-                        Type.text += "Battery Percent:  " + value.ToString("#0%");
-                    }
-                    else
-                    {
-                        Type.text += "Fuel Percent:  " + value.ToString("#0%");
-                    }
-                }
-            }
 
         }
 
@@ -64,9 +60,13 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static void CityServiceVehicleUpdateBindings(CityServiceVehicleWorldInfoPanel __instance, ref InstanceID ___m_InstanceID)
         {
             var Type = __instance.Find<UILabel>("Type");
-            if (___m_InstanceID.Vehicle != 0 && Type != null && VehicleFuelManager.VehicleFuelExist(___m_InstanceID.Vehicle))
+            if (Type == null)
             {
-                var vehicleFuel = VehicleFuelManager.GetVehicleFuel(___m_InstanceID.Vehicle);
+                return;
+            }
+            if (___m_InstanceID.Vehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.Vehicle))
+            {
+                var vehicleFuel = VehicleFuelManager.GetFuelData(___m_InstanceID.Vehicle);
                 Type.parent.height = 35;
                 Type.text += Environment.NewLine;
                 float value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
