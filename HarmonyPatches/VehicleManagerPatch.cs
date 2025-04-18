@@ -12,16 +12,16 @@ namespace CarRentalAndBuyMod.HarmonyPatches
     {
         [HarmonyPatch(typeof(VehicleManager), "ReleaseVehicle")]
         [HarmonyPrefix]
-        public static void ReleaseVehicle(ushort vehicleId)
+        public static void ReleaseVehicle(ushort vehicle)
         {
-            VehicleRemoved(vehicleId);
+            VehicleRemoved(vehicle);
         }
 
         [HarmonyPatch(typeof(VehicleManager), "ReleaseParkedVehicle")]
         [HarmonyPrefix]
-        public static void ReleaseParkedVehicle(ushort parkedVehicleId)
+        public static void ReleaseParkedVehicle(ushort parked)
         {
-            VehicleRemoved(parkedVehicleId);
+            VehicleRemoved(parked);
         }
 
         public static VehicleInfo GetVehicleInfo(ref CitizenInstance citizenData)
