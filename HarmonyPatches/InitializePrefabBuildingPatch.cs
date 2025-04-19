@@ -14,7 +14,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         {
             try
             {
-                if ((__instance.name.ToLower().Contains("gas station") || __instance.name.ToLower().Contains("gasstation") || __instance.name.ToLower().Contains("gaspumps")) && __instance.GetAI() is not GasStationAI)
+                if ((__instance.name.ToLower().Contains("gas station") || __instance.name.ToLower().Contains("gasstation") 
+                    || __instance.name.ToLower().Contains("gaspumps") || __instance.name.ToLower().Contains("gas pumps")) && __instance.GetAI() is not GasStationAI)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
                     Object.DestroyImmediate(oldAI);
