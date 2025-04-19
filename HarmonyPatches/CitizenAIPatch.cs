@@ -12,7 +12,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPatch(typeof(CitizenAI), "StartPathFind", [typeof(ushort), typeof(CitizenInstance), typeof(Vector3), typeof(Vector3), typeof(VehicleInfo), typeof(bool), typeof(bool)],
            [ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal, ArgumentType.Normal])]
         [HarmonyPrefix]
-
         public static bool StartPathFind(CitizenAI __instance, ushort instanceID, ref CitizenInstance citizenData, Vector3 startPos, Vector3 endPos, VehicleInfo vehicleInfo, bool enableTransport, bool ignoreCost, ref bool __result)
         {
             NetInfo.LaneType laneType = NetInfo.LaneType.Pedestrian;
@@ -39,7 +38,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 else
                 {
                     if ((vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Car &&
-                        (instance2.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle != 0 || HumanAIPatch.IsRoadConnection(citizenData.m_sourceBuilding))) ||
+                        (instance2.m_citizens.m_buffer[citizenData.m_citizen].m_vehicle != 0 || instance2.m_citizens.m_buffer[citizenData.m_citizen].m_parkedVehicle != 0
+                        || HumanAIPatch.IsRoadConnection(citizenData.m_sourceBuilding))) ||
                         vehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Bicycle)
                     {
                         laneType |= NetInfo.LaneType.Vehicle;
