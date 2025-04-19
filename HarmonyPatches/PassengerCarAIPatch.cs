@@ -102,21 +102,22 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
             if (citizen.m_parkedVehicle != 0 && VehicleFuelManager.FuelDataExist(vehicleID))
             {
-                if(vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || 
+                var fuelData = VehicleFuelManager.GetFuelData(vehicleID);
+                if (vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || 
                     vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle)
                 {
-                    var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
                     var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
                     ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
                     if (building.Info.GetAI() is GasStationAI gasStationAI)
                     {
-                        VehicleFuelManager.SetCurrentFuelCapacity(vehicleID, vehicleFuel.MaxFuelCapacity - vehicleFuel.CurrentFuelCapacity);
-                        var neededFuel = (int)vehicleFuel.MaxFuelCapacity;
+                        VehicleFuelManager.SetCurrentFuelCapacity(vehicleID, fuelData.MaxFuelCapacity - fuelData.CurrentFuelCapacity);
+                        var neededFuel = (int)fuelData.MaxFuelCapacity;
                         FuelVehicle(vehicleID, ref vehicleData, gasStationAI, ref building, neededFuel);
                         vehicleData.m_custom = 0;
                     }
                 }
-                VehicleFuelManager.UpdateParkingMode(vehicleID, citizen.m_parkedVehicle, true);
+                VehicleFuelManager.CreateParkedFuelData(citizen.m_parkedVehicle, fuelData.CurrentFuelCapacity, fuelData.MaxFuelCapacity, fuelData.OriginalTargetBuilding);
+                VehicleFuelManager.RemoveFuelData(vehicleID);
             }
         }
 

@@ -25,21 +25,24 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
             ushort vehicleId = 0;
             VehicleInfo vehicleInfo = null;
-            if(___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.Vehicle))
+            double value = 0;
+            if (___m_InstanceID.Type == InstanceType.Vehicle && ___m_InstanceID.Vehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.Vehicle))
             {
                 vehicleId = ___m_InstanceID.Vehicle;
                 vehicleInfo = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[___m_InstanceID.Vehicle].Info;
+                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleId);
+                value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
             }
-            if(___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && VehicleFuelManager.FuelDataExist(___m_InstanceID.ParkedVehicle))
+            else if(___m_InstanceID.Type == InstanceType.ParkedVehicle && ___m_InstanceID.ParkedVehicle != 0 && VehicleFuelManager.ParkedFuelDataExist(___m_InstanceID.ParkedVehicle))
             {
                 vehicleId = ___m_InstanceID.ParkedVehicle;
                 vehicleInfo = Singleton<VehicleManager>.instance.m_parkedVehicles.m_buffer[___m_InstanceID.ParkedVehicle].Info;
+                var vehicleFuel = VehicleFuelManager.GetParkedFuelData(vehicleId);
+                value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
             }
 
             if (vehicleId != 0 && vehicleInfo != null)
             {
-                var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleId);
-                double value = vehicleFuel.CurrentFuelCapacity / vehicleFuel.MaxFuelCapacity;
                 bool isElectric = vehicleInfo.m_class.m_subService != ItemClass.SubService.ResidentialLow;
                 Type.text += Environment.NewLine;
                 Type.parent.height = 35;

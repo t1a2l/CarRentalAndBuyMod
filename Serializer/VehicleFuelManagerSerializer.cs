@@ -10,7 +10,7 @@ namespace CarRentalAndBuyMod.Serializer
         private const uint uiTUPLE_START = 0xFEFEFEFE;
         private const uint uiTUPLE_END = 0xFAFAFAFA;
 
-        private const ushort iVEHICLE_FUEL_MANAGER_DATA_VERSION = 2;
+        private const ushort iVEHICLE_FUEL_MANAGER_DATA_VERSION = 1;
 
         public static void SaveData(FastList<byte> Data)
         {
@@ -29,7 +29,23 @@ namespace CarRentalAndBuyMod.Serializer
                 StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
                 StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
                 StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
-                StorageData.WriteBool(kvp.Value.IsParked, Data);
+
+                // Write end tuple
+                StorageData.WriteUInt32(uiTUPLE_END, Data);
+            }
+
+            StorageData.WriteInt32(VehicleFuelManager.ParkedVehiclesFuel.Count, Data);
+
+            foreach (var kvp in VehicleFuelManager.ParkedVehiclesFuel)
+            {
+                // Write start tuple
+                StorageData.WriteUInt32(uiTUPLE_START, Data);
+
+                // Write actual settings
+                StorageData.WriteUInt16(kvp.Key, Data);
+                StorageData.WriteFloat(kvp.Value.CurrentFuelCapacity, Data);
+                StorageData.WriteFloat(kvp.Value.MaxFuelCapacity, Data);
+                StorageData.WriteUInt16(kvp.Value.OriginalTargetBuilding, Data);
 
                 // Write end tuple
                 StorageData.WriteUInt32(uiTUPLE_END, Data);
@@ -56,26 +72,25 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-                    if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleId, out _))
-                    {
-                        var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
-                        {
-                            CurrentFuelCapacity = currentFuelCapacity,
-                            MaxFuelCapacity = maxFuelCapacity,
-                            OriginalTargetBuilding = originalTargetBuilding
-                        };
 
-                        if(iVehicleFuelManagerVersion == 1)
+                    var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                    {
+                        CurrentFuelCapacity = currentFuelCapacity,
+                        MaxFuelCapacity = maxFuelCapacity,
+                        OriginalTargetBuilding = originalTargetBuilding
+                    };
+
+                    if (iVehicleFuelManagerVersion > 1)
+                    {
+                        bool isParked = StorageData.ReadBool(Data, ref iIndex);
+                        if(isParked)
                         {
-                            vehicleFuelCapacity.IsParked = false;
+                            VehicleFuelManager.ParkedVehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
                         }
                         else
                         {
-                            bool isParked = StorageData.ReadBool(Data, ref iIndex);
-                            vehicleFuelCapacity.IsParked = isParked;
+                            VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
                         }
-
-                        VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
                     }
 
                     CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
@@ -88,7 +103,7 @@ namespace CarRentalAndBuyMod.Serializer
                     {
                         CheckStartTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
 
-                        ushort vehicleId = StorageData.ReadUInt16(Data, ref iIndex);
+                        ushort parkedVehicleId = StorageData.ReadUInt16(Data, ref iIndex);
 
                         float currentFuelCapacity = StorageData.ReadFloat(Data, ref iIndex);
 
@@ -96,17 +111,16 @@ namespace CarRentalAndBuyMod.Serializer
 
                         ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-                        if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleId, out _))
+                        if (!VehicleFuelManager.ParkedVehiclesFuel.TryGetValue(parkedVehicleId, out _))
                         {
                             var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
                             {
                                 CurrentFuelCapacity = currentFuelCapacity,
                                 MaxFuelCapacity = maxFuelCapacity,
-                                OriginalTargetBuilding = originalTargetBuilding,
-                                IsParked = true
+                                OriginalTargetBuilding = originalTargetBuilding
                             };
 
-                            VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
+                            VehicleFuelManager.ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
                         }
 
                         CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);

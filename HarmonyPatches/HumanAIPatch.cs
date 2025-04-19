@@ -273,7 +273,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     int num7 = 0;
                     while (num6 != 0)
                     {
-                        if (HumanAIPatch.TryJoinVehicle(instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
+                        if (TryJoinVehicle(instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
                         {
                             citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
                             citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
@@ -348,10 +348,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         rental.IsParked = false;
                         VehicleRentalManager.SetRentalData(citizenData.m_citizen, rental);
                     }
-                    if (VehicleFuelManager.FuelDataExist(parkedVehicle))
+                    if (VehicleFuelManager.ParkedFuelDataExist(parkedVehicle))
                     {
-                        Debug.Log("CarRentalAndBuyMod: HumanAI - UpateFuelDataToDrivingVehicle");
-                        VehicleFuelManager.UpdateParkingMode(parkedVehicle, vehicle, false);
+                        Debug.Log("CarRentalAndBuyMod: HumanAI - UpdateFuelDataToDrivingVehicle");
+                        var fuelData = VehicleFuelManager.GetParkedFuelData(parkedVehicle);
+                        VehicleFuelManager.CreateFuelData(vehicle, fuelData.CurrentFuelCapacity, fuelData.MaxFuelCapacity, fuelData.OriginalTargetBuilding);
+                        VehicleFuelManager.RemoveParkedFuelData(parkedVehicle);
                     }
                 }
                 Vehicle.Frame frameData = instance.m_vehicles.m_buffer[vehicle].m_frame0;
