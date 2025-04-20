@@ -58,7 +58,7 @@ namespace CarRentalAndBuyMod.Managers
                 OriginalTargetBuilding = originalTargetBuilding
             };
 
-            VehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
+            ParkedVehiclesFuel.Add(parkedVehicleId, vehicleFuelCapacity);
 
             return vehicleFuelCapacity;
         }
