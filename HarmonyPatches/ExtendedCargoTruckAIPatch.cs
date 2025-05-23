@@ -33,6 +33,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, data.m_targetBuilding);
                 }
+                if (!CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data))
+                {
+                    data.m_targetBuilding = 0;
+                    __instance.SetTarget(vehicleID, ref data, 0);
+                    data.Unspawn(vehicleID);
+                }
             }
         }
 

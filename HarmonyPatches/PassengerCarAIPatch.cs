@@ -65,25 +65,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return true;
         }
 
-        [HarmonyBefore(["me.tmpe"])]
-        [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
-        [HarmonyPrefix]
-        public static void ParkVehiclePrefix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset)
-        {
-            if (VehicleFuelManager.FuelDataExist(vehicleID) && (vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelVehicle || 
-                vehicleData.m_custom == (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle))
-            {
-                var citizenId = __instance.GetOwnerID(vehicleID, ref vehicleData).Citizen;
-                ref var citizen = ref Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId];
-                var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizen.m_instance];
-                ref var building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding];
-                if (building.Info.GetAI() is GasStationAI)
-                {
-                    UpdatePassengersTempTarget(vehicleID, ref vehicleData, citizenInstance.m_targetBuilding);
-                }
-            }
-        }
-
         [HarmonyPatch(typeof(PassengerCarAI), "ParkVehicle")]
         [HarmonyPostfix]
         public static void ParkVehiclePostfix(PassengerCarAI __instance, ushort vehicleID, ref Vehicle vehicleData, PathUnit.Position pathPos, uint nextPath, int nextPositionIndex, ref byte segmentOffset)
@@ -114,6 +95,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         var neededFuel = (int)fuelData.MaxFuelCapacity;
                         FuelVehicle(vehicleID, ref vehicleData, gasStationAI, ref building, neededFuel);
                         vehicleData.m_custom = 0;
+                        fuelData = VehicleFuelManager.GetFuelData(vehicleID);
                     }
                 }
                 VehicleFuelManager.CreateParkedFuelData(citizen.m_parkedVehicle, fuelData.CurrentFuelCapacity, fuelData.MaxFuelCapacity, fuelData.OriginalTargetBuilding);
@@ -235,9 +217,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             }
         }
 
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
         [HarmonyPrefix]
-        public static void SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public static bool SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
             var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
             if(citizenId != 0)
@@ -262,9 +245,17 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                                 data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
                             }  
                         }
+                        if (!CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data))
+                        {
+                            data.m_targetBuilding = 0;
+                            __instance.SetTarget(vehicleID, ref data, 0);
+                            data.Unspawn(vehicleID);
+                        }
+                        return false;
                     }
                 }
             }
+            return true;
         }
 
         [HarmonyPatch(typeof(PassengerCarAI), "ArriveAtTarget")]
@@ -287,7 +278,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
                     var originalTargetBuilding = vehicleFuel.OriginalTargetBuilding;
-                    VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, 0);
                     if(originalTargetBuilding == citizenInstance.m_targetBuilding)
                     {
                         __result = true;
@@ -314,35 +304,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
             data.m_flags &= ~Vehicle.Flags.Stopped;
-        }
-
-        private static void UpdatePassengersTempTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
-        {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = data.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
-            {
-                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
-                for (int i = 0; i < 5; i++)
-                {
-                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
-                    if (citizen != 0)
-                    {
-                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
-                        if (instance2 != 0)
-                        {
-                            instance.m_instances.m_buffer[instance2].m_targetBuilding = targetBuilding;
-                        }
-                    }
-                }
-                num = nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
-            }
         }
     }
 }
