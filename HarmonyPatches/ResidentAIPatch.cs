@@ -79,9 +79,9 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(ResidentAI), "SpawnVehicle")]
         [HarmonyPrefix]
-        public static bool SpawnVehicle(ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
+        public static bool SpawnVehicle(ResidentAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos, ref bool __result)
         {
-            __result = HumanAIPatch.SpawnVehicle(instanceID, ref citizenData, pathPos);
+            __result = HumanAIPatch.SpawnVehicle(__instance, instanceID, ref citizenData, pathPos);
             return false;
         }
 

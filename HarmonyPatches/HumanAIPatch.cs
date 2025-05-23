@@ -257,35 +257,38 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             return false;
         }
 
-        public static bool SpawnVehicle(ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
+        public static bool SpawnVehicle(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
         {
             VehicleManager instance = Singleton<VehicleManager>.instance;
-            float num = 20f;
-            int num2 = Mathf.Max((int)((citizenData.m_targetPos.x - num) / 32f + 270f), 0);
-            int num3 = Mathf.Max((int)((citizenData.m_targetPos.z - num) / 32f + 270f), 0);
-            int num4 = Mathf.Min((int)((citizenData.m_targetPos.x + num) / 32f + 270f), 539);
-            int num5 = Mathf.Min((int)((citizenData.m_targetPos.z + num) / 32f + 270f), 539);
-            for (int i = num3; i <= num5; i++)
+            if(__instance is ResidentAI)
             {
-                for (int j = num2; j <= num4; j++)
+                float num = 20f;
+                int num2 = Mathf.Max((int)((citizenData.m_targetPos.x - num) / 32f + 270f), 0);
+                int num3 = Mathf.Max((int)((citizenData.m_targetPos.z - num) / 32f + 270f), 0);
+                int num4 = Mathf.Min((int)((citizenData.m_targetPos.x + num) / 32f + 270f), 539);
+                int num5 = Mathf.Min((int)((citizenData.m_targetPos.z + num) / 32f + 270f), 539);
+                for (int i = num3; i <= num5; i++)
                 {
-                    ushort num6 = instance.m_vehicleGrid[i * 540 + j];
-                    int num7 = 0;
-                    while (num6 != 0)
+                    for (int j = num2; j <= num4; j++)
                     {
-                        if (TryJoinVehicle(instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
+                        ushort num6 = instance.m_vehicleGrid[i * 540 + j];
+                        int num7 = 0;
+                        while (num6 != 0)
                         {
-                            citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
-                            citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
-                            citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
-                            citizenData.m_waitCounter = 0;
-                            return true;
-                        }
-                        num6 = instance.m_vehicles.m_buffer[num6].m_nextGridVehicle;
-                        if (++num7 > 16384)
-                        {
-                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                            break;
+                            if (TryJoinVehicle(instanceID, ref citizenData, num6, ref instance.m_vehicles.m_buffer[num6]))
+                            {
+                                citizenData.m_flags |= CitizenInstance.Flags.EnteringVehicle;
+                                citizenData.m_flags &= ~CitizenInstance.Flags.TryingSpawnVehicle;
+                                citizenData.m_flags &= ~CitizenInstance.Flags.BoredOfWaiting;
+                                citizenData.m_waitCounter = 0;
+                                return true;
+                            }
+                            num6 = instance.m_vehicles.m_buffer[num6].m_nextGridVehicle;
+                            if (++num7 > 16384)
+                            {
+                                CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                                break;
+                            }
                         }
                     }
                 }
