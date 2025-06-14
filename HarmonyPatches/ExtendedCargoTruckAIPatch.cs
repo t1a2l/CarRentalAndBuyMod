@@ -24,7 +24,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
 
         [HarmonyPatch(typeof(ExtendedCargoTruckAI), "SetTarget")]
         [HarmonyPrefix]
-        public static void SetTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public static bool SetTarget(ExtendedCargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
             if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].Info.GetAI() is GasStationAI && VehicleFuelManager.FuelDataExist(vehicleID))
             {
@@ -33,13 +33,27 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     VehicleFuelManager.SetOriginalTargetBuilding(vehicleID, data.m_targetBuilding);
                 }
-                if (!CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data))
+                data.m_targetBuilding = targetBuilding;
+                var pathToGasStation = CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data);
+                if (pathToGasStation)
                 {
-                    data.m_targetBuilding = 0;
-                    __instance.SetTarget(vehicleID, ref data, 0);
-                    data.Unspawn(vehicleID);
+                    bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
+                    if (isElectric)
+                    {
+                        data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle;
+                    }
+                    else
+                    {
+                        data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
+                    }
+                    return false;
                 }
+                data.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                __instance.SetTarget(vehicleID, ref data, vehicleFuel.OriginalTargetBuilding);
+                data.Unspawn(vehicleID);
+                return false;
             }
+            return true;
         }
 
         [HarmonyPatch(typeof(ExtendedCargoTruckAI), "ArriveAtTarget")]

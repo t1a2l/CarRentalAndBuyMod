@@ -220,37 +220,38 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(PassengerCarAI), "SetTarget")]
         [HarmonyPrefix]
-        public static bool SetTarget(PassengerCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public static bool SetTarget(ref CargoTruckAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
         {
-            var citizenId = __instance.GetOwnerID(vehicleID, ref data).Citizen;
+            var citizenId = GetOwnerID(vehicleID, ref data).Citizen;
             if(citizenId != 0)
             {
                 var citizenInstanceId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[citizenId].m_instance;
                 if(citizenInstanceId != 0)
                 {
-                    var citizenInstance = Singleton<CitizenManager>.instance.m_instances.m_buffer[citizenInstanceId];
+                    ref var citizenInstance = ref Singleton<CitizenManager>.instance.m_instances.m_buffer[citizenInstanceId];
                     if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding].Info.GetAI() is GasStationAI 
                         && VehicleFuelManager.FuelDataExist(vehicleID))
                     {
+                        data.m_targetBuilding = citizenInstance.m_targetBuilding;
+                        var pathToGasStation = CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data);
                         var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
-                        if(vehicleFuel.OriginalTargetBuilding != 0)
+                        if (pathToGasStation)
                         {
                             bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                            if(isElectric)
+                            if (isElectric)
                             {
                                 data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle;
                             }
                             else
                             {
                                 data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
-                            }  
+                            }
+                            return false;
                         }
-                        if (!CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data))
-                        {
-                            data.m_targetBuilding = 0;
-                            __instance.SetTarget(vehicleID, ref data, 0);
-                            data.Unspawn(vehicleID);
-                        }
+                        data.m_targetBuilding = 0;
+                        citizenInstance.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                        __instance.SetTarget(vehicleID, ref data, vehicleFuel.OriginalTargetBuilding);
+                        data.Unspawn(vehicleID);
                         return false;
                     }
                 }
@@ -304,6 +305,51 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
             data.m_flags &= ~Vehicle.Flags.Stopped;
+        }
+
+
+        private static InstanceID GetOwnerID(ushort vehicleID, ref Vehicle vehicleData)
+        {
+            InstanceID result = default;
+            ushort driverInstance = GetDriverInstance(vehicleID, ref vehicleData);
+            if (driverInstance != 0)
+            {
+                result.Citizen = Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_citizen;
+            }
+
+            return result;
+        }
+
+        private static ushort GetDriverInstance(ushort vehicleID, ref Vehicle data)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = data.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+                for (int i = 0; i < 5; i++)
+                {
+                    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+                    if (citizen != 0)
+                    {
+                        ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+                        if (instance2 != 0)
+                        {
+                            return instance2;
+                        }
+                    }
+                }
+
+                num = nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+
+            return 0;
         }
     }
 }
