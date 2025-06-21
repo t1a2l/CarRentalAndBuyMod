@@ -260,7 +260,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static bool SpawnVehicle(HumanAI __instance, ushort instanceID, ref CitizenInstance citizenData, PathUnit.Position pathPos)
         {
             VehicleManager instance = Singleton<VehicleManager>.instance;
-            if(__instance is ResidentAI)
+            if(__instance is ResidentAI || citizenData.Info.GetAI() is ResidentAI)
             {
                 float num = 20f;
                 int num2 = Mathf.Max((int)((citizenData.m_targetPos.x - num) / 32f + 270f), 0);
