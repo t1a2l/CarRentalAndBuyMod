@@ -42,15 +42,14 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         bool shouldFuel = Singleton<SimulationManager>.instance.m_randomizer.Int32(100U) == 0;
                         if ((percent > 0.2 && percent < 0.8 && shouldFuel) || percent <= 0.2)
                         {
-                            if (__instance is ExtendedCargoTruckAI)
+                            if (__instance is ExtendedCargoTruckAI extendedCargoTruckAI)
                             {
                                 ExtendedTransferManager.Offer offer = default;
                                 offer.Vehicle = vehicleID;
                                 offer.Position = vehicleData.GetLastFramePosition();
                                 offer.Amount = 1;
                                 offer.Active = true;
-                                bool isElectric = vehicleData.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                                if (isElectric)
+                                if (extendedCargoTruckAI.m_isElectric)
                                 {
                                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelElectricVehicle, offer);
                                 }
