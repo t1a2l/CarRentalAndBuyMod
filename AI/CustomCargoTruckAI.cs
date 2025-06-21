@@ -1,4 +1,5 @@
-﻿using CarRentalAndBuyMod.Managers;
+﻿using CarRentalAndBuyMod.HarmonyPatches;
+using CarRentalAndBuyMod.Managers;
 using ColossalFramework;
 using ColossalFramework.Math;
 using UnityEngine;
@@ -41,7 +42,7 @@ namespace CarRentalAndBuyMod.AI
         {
             if ((vehicleData.m_flags & (Vehicle.Flags.TransferToSource | Vehicle.Flags.GoingBack)) != 0)
             {
-                return CarAIStartPathFind(__instance, vehicleID, ref vehicleData, startPos, endPos, startBothWays, endBothWays, undergroundTarget);
+                return CarAIPatch.BaseCarAIStartPathFind(__instance, vehicleID, ref vehicleData, startPos, endPos, startBothWays, endBothWays, undergroundTarget);
             }
             bool allowUnderground = (vehicleData.m_flags & (Vehicle.Flags.Underground | Vehicle.Flags.Transition)) != 0;
             bool flag = PathManager.FindPathPosition(startPos, ItemClass.Service.Road, NetInfo.LaneType.Vehicle | NetInfo.LaneType.TransportVehicle, VehicleInfo.VehicleType.Car, vehicleData.Info.vehicleCategory, allowUnderground, requireConnect: false, 32f, excludeLaneWidth: false, checkPedestrianStreet: false, out PathUnit.Position pathPosA, out PathUnit.Position pathPosB, out float distanceSqrA, out float distanceSqrB) && !startNotUseTruck;
@@ -105,35 +106,5 @@ namespace CarRentalAndBuyMod.AI
             }
             return false;
         }
-
-
-        private static bool CarAIStartPathFind(CargoTruckAI instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 startPos, Vector3 endPos, bool startBothWays, bool endBothWays, bool undergroundTarget)
-        {
-            VehicleInfo info = instance.m_info;
-            bool allowUnderground = (vehicleData.m_flags & (Vehicle.Flags.Underground | Vehicle.Flags.Transition)) != 0;
-            if (PathManager.FindPathPosition(startPos, ItemClass.Service.Road, NetInfo.LaneType.Vehicle | NetInfo.LaneType.TransportVehicle, info.m_vehicleType, info.vehicleCategory, allowUnderground, requireConnect: false, 32f, excludeLaneWidth: false, checkPedestrianStreet: false, out var pathPosA, out var pathPosB, out var distanceSqrA, out var _) && PathManager.FindPathPosition(endPos, ItemClass.Service.Road, NetInfo.LaneType.Vehicle | NetInfo.LaneType.TransportVehicle, info.m_vehicleType, info.vehicleCategory, undergroundTarget, requireConnect: false, 32f, excludeLaneWidth: false, checkPedestrianStreet: false, out var pathPosA2, out var pathPosB2, out var distanceSqrA2, out var _))
-            {
-                if (!startBothWays || distanceSqrA < 10f)
-                {
-                    pathPosB = default;
-                }
-                if (!endBothWays || distanceSqrA2 < 10f)
-                {
-                    pathPosB2 = default;
-                }
-                if (Singleton<PathManager>.instance.CreatePath(out var unit, ref Singleton<SimulationManager>.instance.m_randomizer, Singleton<SimulationManager>.instance.m_currentBuildIndex, pathPosA, pathPosB, pathPosA2, pathPosB2, default(PathUnit.Position), NetInfo.LaneType.Vehicle, info.m_vehicleType, info.vehicleCategory, 20000f, instance.m_isHeavyVehicle, false, stablePath: false, skipQueue: false, randomParking: false, ignoreFlooded: false, true))
-                {
-                    if (vehicleData.m_path != 0)
-                    {
-                        Singleton<PathManager>.instance.ReleasePath(vehicleData.m_path);
-                    }
-                    vehicleData.m_path = unit;
-                    vehicleData.m_flags |= Vehicle.Flags.WaitingPath;
-                    return true;
-                }
-            }
-            return false;
-        }
-
     }
 }
