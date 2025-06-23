@@ -230,28 +230,19 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                 {
                     ref var citizenInstance = ref Singleton<CitizenManager>.instance.m_instances.m_buffer[citizenInstanceId];
                     if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[citizenInstance.m_targetBuilding].Info.GetAI() is GasStationAI 
-                        && VehicleFuelManager.FuelDataExist(vehicleID))
+                        && VehicleFuelManager.FuelDataExist(vehicleID) && data.m_custom != 0)
                     {
                         data.m_targetBuilding = citizenInstance.m_targetBuilding;
                         var pathToGasStation = CustomCargoTruckAI.CustomStartPathFind(vehicleID, ref data);
                         var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
-                        if (pathToGasStation)
+                        if (!pathToGasStation)
                         {
-                            bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-                            if (isElectric)
-                            {
-                                data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle;
-                            }
-                            else
-                            {
-                                data.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
-                            }
-                            return false;
+                            data.m_targetBuilding = 0;
+                            data.m_custom = 0;
+                            citizenInstance.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
+                            __instance.SetTarget(vehicleID, ref data, vehicleFuel.OriginalTargetBuilding);
+                            data.Unspawn(vehicleID);
                         }
-                        data.m_targetBuilding = 0;
-                        citizenInstance.m_targetBuilding = vehicleFuel.OriginalTargetBuilding;
-                        __instance.SetTarget(vehicleID, ref data, vehicleFuel.OriginalTargetBuilding);
-                        data.Unspawn(vehicleID);
                         return false;
                     }
                 }
@@ -279,18 +270,10 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     FuelVehicle(vehicleID, ref data, gasStationAI, ref building, neededFuel);
                     data.m_custom = 0;
                     var originalTargetBuilding = vehicleFuel.OriginalTargetBuilding;
-                    if(originalTargetBuilding == citizenInstance.m_targetBuilding)
-                    {
-                        __result = true;
-                        return true;
-                    }
-                    else
-                    {
-                        var humanAI = citizen.GetCitizenInfo(citizenId).GetAI() as HumanAI;
-                        humanAI.StartMoving(citizenId, ref citizen, citizenInstance.m_targetBuilding, originalTargetBuilding);
-                        __result = false;
-                        return false;
-                    }   
+                    var humanAI = citizen.GetCitizenInfo(citizenId).GetAI() as HumanAI;
+                    humanAI.StartMoving(citizenId, ref citizen, citizenInstance.m_targetBuilding, originalTargetBuilding);
+                    __result = false;
+                    return false;
                 }
             }
             return true;
@@ -316,7 +299,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
             {
                 result.Citizen = Singleton<CitizenManager>.instance.m_instances.m_buffer[driverInstance].m_citizen;
             }
-
             return result;
         }
 
@@ -340,7 +322,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                         }
                     }
                 }
-
                 num = nextUnit;
                 if (++num2 > 524288)
                 {
@@ -348,7 +329,6 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                     break;
                 }
             }
-
             return 0;
         }
     }

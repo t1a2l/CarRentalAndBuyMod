@@ -65,9 +65,15 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         public static bool SetTarget(TouristAI __instance, ushort instanceID, ref CitizenInstance data, ushort targetIndex, bool targetIsNode)
         {
             var vehicleId = Singleton<CitizenManager>.instance.m_citizens.m_buffer[data.m_citizen].m_vehicle;
-            if (Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI && vehicleId != 0 && VehicleFuelManager.FuelDataExist(vehicleId))
+            if(vehicleId != 0)
             {
-                VehicleFuelManager.SetOriginalTargetBuilding(vehicleId, data.m_targetBuilding);
+                var isGasStation = Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetIndex].Info.GetAI() is GasStationAI;
+                var needFuel = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[vehicleId].m_custom != 0;
+                if (isGasStation && needFuel && VehicleFuelManager.FuelDataExist(vehicleId))
+                {
+                    var targetBuilding = data.m_targetBuilding != 0 ? data.m_targetBuilding : targetIndex;
+                    VehicleFuelManager.SetOriginalTargetBuilding(vehicleId, targetBuilding);
+                }
             }
             if(VehicleRentalManager.RentalDataExist(data.m_citizen) && targetIndex != 0 && HumanAIPatch.IsRoadConnection(targetIndex) && !CitizenDestinationManager.CitizenDestinationExist(data.m_citizen))
             {

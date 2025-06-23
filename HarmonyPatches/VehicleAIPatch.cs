@@ -29,7 +29,7 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         [HarmonyPrefix]
         public static void SimulationStep(VehicleAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics)
         {
-            if (VehicleFuelManager.FuelDataExist(vehicleID))
+            if (VehicleFuelManager.FuelDataExist(vehicleID) && vehicleData.m_custom == 0)
             {
                 var vehicleFuel = VehicleFuelManager.GetFuelData(vehicleID);
                 if (__instance is ExtendedCargoTruckAI || __instance is PassengerCarAI)
@@ -52,10 +52,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                                 if (extendedCargoTruckAI.m_isElectric)
                                 {
                                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelElectricVehicle, offer);
+                                    vehicleData.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle;
                                 }
                                 else
                                 {
                                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                    vehicleData.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
                                 }
                             }
                             if (__instance is PassengerCarAI)
@@ -69,10 +71,12 @@ namespace CarRentalAndBuyMod.HarmonyPatches
                                 if(isElectric)
                                 {
                                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelElectricVehicle, offer);
+                                    vehicleData.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelElectricVehicle;
                                 }
                                 else
                                 {
                                     Singleton<ExtendedTransferManager>.instance.AddOutgoingOffer(ExtendedTransferManager.TransferReason.FuelVehicle, offer);
+                                    vehicleData.m_custom = (ushort)ExtendedTransferManager.TransferReason.FuelVehicle;
                                 }   
                             }
                         }
