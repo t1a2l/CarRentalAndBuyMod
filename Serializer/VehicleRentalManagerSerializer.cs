@@ -43,7 +43,7 @@ namespace CarRentalAndBuyMod.Serializer
             if (Data != null && Data.Length > iIndex)
             {
                 int iVehicleRentalManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
-                Debug.Log("CarRentalAndBuyMod - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleRentalManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                Debug.Log("CarRentalAndBuyMod VehicleRental - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleRentalManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
                 VehicleRentalManager.VehicleRentals ??= [];
                 int VehicleRentals_Count = StorageData.ReadInt32(Data, ref iIndex);
                 Debug.Log("CarRentalAndBuyMod: Load VehicleRentals_Count: " + VehicleRentals_Count);
