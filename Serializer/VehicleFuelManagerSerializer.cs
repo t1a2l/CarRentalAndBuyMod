@@ -57,7 +57,7 @@ namespace CarRentalAndBuyMod.Serializer
             if (Data != null && Data.Length > iIndex)
             {
                 int iVehicleFuelManagerVersion = StorageData.ReadUInt16(Data, ref iIndex);
-                Debug.Log("CarRentalAndBuyMod - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleFuelManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
+                Debug.Log("CarRentalAndBuyMod VehicleFuel - Global: " + iGlobalVersion + " BufferVersion: " + iVehicleFuelManagerVersion + " DataLength: " + Data.Length + " Index: " + iIndex);
                 VehicleFuelManager.VehiclesFuel ??= [];
                 int VehiclesFuel_Count = StorageData.ReadInt32(Data, ref iIndex);
                 for (int i = 0; i < VehiclesFuel_Count; i++)
@@ -72,27 +72,18 @@ namespace CarRentalAndBuyMod.Serializer
 
                     ushort originalTargetBuilding = StorageData.ReadUInt16(Data, ref iIndex);
 
-
-                    var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                    if (!VehicleFuelManager.VehiclesFuel.TryGetValue(vehicleId, out _))
                     {
-                        CurrentFuelCapacity = currentFuelCapacity,
-                        MaxFuelCapacity = maxFuelCapacity,
-                        OriginalTargetBuilding = originalTargetBuilding
-                    };
+                        var vehicleFuelCapacity = new VehicleFuelManager.VehicleFuelCapacity
+                        {
+                            CurrentFuelCapacity = currentFuelCapacity,
+                            MaxFuelCapacity = maxFuelCapacity,
+                            OriginalTargetBuilding = originalTargetBuilding
+                        };
 
-                    if (iVehicleFuelManagerVersion > 1)
-                    {
-                        bool isParked = StorageData.ReadBool(Data, ref iIndex);
-                        if(isParked)
-                        {
-                            VehicleFuelManager.ParkedVehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
-                        }
-                        else
-                        {
-                            VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
-                        }
+                        VehicleFuelManager.VehiclesFuel.Add(vehicleId, vehicleFuelCapacity);
                     }
-
+                        
                     CheckEndTuple($"Buffer({i})", iVehicleFuelManagerVersion, Data, ref iIndex);
                 }
 
