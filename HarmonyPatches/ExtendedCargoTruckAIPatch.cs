@@ -80,8 +80,8 @@ namespace CarRentalAndBuyMod.HarmonyPatches
         private static void FuelVehicle(ushort vehicleID, ref Vehicle data, GasStationAI gasStationAI, ref Building building, int neededFuel)
         {
             data.m_flags |= Vehicle.Flags.Stopped;
-            bool isElectric = data.Info.m_class.m_subService != ItemClass.SubService.ResidentialLow;
-            if (!isElectric)
+            ExtendedCargoTruckAI extendedCargoTruckAI = data.Info.GetAI() as ExtendedCargoTruckAI;
+            if (extendedCargoTruckAI != null && !extendedCargoTruckAI.m_isElectric)
             {
                 gasStationAI.ExtendedModifyMaterialBuffer(data.m_targetBuilding, ref building, ExtendedTransferManager.TransferReason.FuelVehicle, ref neededFuel);
             }
